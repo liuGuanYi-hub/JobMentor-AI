@@ -34,6 +34,20 @@
     </div>
     <div class="topbar-meta">
       <span class="topbar-tip">基于目标岗位 JD · 诊断 · 匹配 · 优化 · 面试准备</span>
+      <div class="task-dropdown" id="taskDropdown">
+        <button class="ghost-btn" id="taskBtn" title="任务管理">
+          <i data-lucide="folder-open" width="14"></i>
+          <span id="taskBtnLabel">任务 1</span>
+          <i data-lucide="chevron-down" width="12"></i>
+        </button>
+        <div class="task-menu hidden" id="taskMenu">
+          <div class="task-menu-header">
+            <span>我的任务</span>
+            <button class="text-btn" id="newTaskBtn">＋ 新建</button>
+          </div>
+          <div class="task-list" id="taskList"></div>
+        </div>
+      </div>
       <button class="ghost-btn" id="apiKeyBtn" title="设置 DeepSeek API Key">
         <i data-lucide="key" width="14"></i>
         <span id="apiKeyStatus">未设置</span>

@@ -34,12 +34,15 @@ node dev-server.mjs
 ## 功能亮点
 
 - **8 步完整流程**：输入材料 → JD 解析 → 简历诊断 → 匹配分析 → 经历追问 → 简历优化 → 面试准备 → 最终简历
+- **多任务管理**：本地保存多份分析任务（不同岗位/公司），可新建/切换/重命名/删除，数据完全隔离
+- **简历版本对比**：同一份简历保存多个定制版本（不同岗位方向），并排 diff 对比，一键应用
 - **隐私脱敏**：手机号 / 邮箱 / 身份证 自动替换为占位符，AI 返回后还原
 - **多模板导出**：5 套简历模板（时间轴 / 经典 / 双栏 / GitHub / AI）+ 主题色 + 头像
 - **多种导出格式**：复制精简文本 / 导出 PDF / 导出 Word / 全量综合报告 PDF / JD 解析 PDF
 - **PDF / Word 简历解析**：前端本地解析，不上传服务器
 - **状态恢复**：未完成的进度自动保存到 localStorage，下次打开可恢复
 - **API Key 连通性测试**：设置 Key 时可一键验证网络可达性
+- **浏览器插件联动**：Chrome 插件选中网页 JD 一键发送到本地应用（见 `extension/`）
 
 ## 技术栈
 
@@ -51,6 +54,7 @@ node dev-server.mjs
 - PDF 导出：html2canvas + jspdf（CDN）
 - Word 导出：docx.js（CDN）
 - AI：DeepSeek API（用户自带 Key）
+- 浏览器插件：Chrome Extension MV3
 
 ## 文件结构
 
@@ -84,7 +88,8 @@ JobMentor AI/
     │   ├── toast.js
     │   ├── modal.js
     │   ├── score-ring.js
-    │   └── progress.js
+    │   ├── progress.js
+    │   └── taskbar.js           # 顶部任务下拉菜单（多任务管理）
     └── steps/
         ├── step1-input.js      # 输入材料
         ├── step2-jd-parse.js   # JD 解析
@@ -93,15 +98,32 @@ JobMentor AI/
         ├── step5-deepdive.js   # 经历追问
         ├── step6-optimize.js   # 简历优化
         ├── step7-interview.js  # 面试准备
-        └── step8-final.js      # 最终简历
+        └── step8-final.js      # 最终简历（含版本管理）
+extension/                      # Chrome 浏览器插件（独立子工程）
+├── manifest.json               # MV3 清单
+├── background.js               # 右键菜单 → 打开本地应用
+├── content.js                  # 选中文本浮动按钮
+├── popup.html / popup.js       # 插件弹窗
+└── icons/                      # 16/48/128 图标
 ```
+
+## 浏览器插件安装（可选）
+
+1. 先启动本地应用：`node dev-server.mjs`
+2. 打开 Chrome → `chrome://extensions` → 打开「开发者模式」
+3. 点击「加载已解压的扩展程序」→ 选择本项目的 `extension/` 目录
+4. 在招聘网站（BOSS直聘 / 拉勾等）选中 JD 文本：
+   - 方式一：右键 → 「发送到简历专家生成定制简历」
+   - 方式二：选中后点击页面上的 ✨ 浮动按钮
+5. 浏览器自动打开本地应用，JD 已自动填入输入框
 
 ## 开发备注
 
 - 所有 AI 调用走 DeepSeek `deepseek-chat` 模型
 - 强制 JSON 输出模式 + 失败自动重试
-- localStorage key：`jobmentor-ai-v1`
+- localStorage key：`jobmentor-ai-v1`（v2 结构：多任务 + 多版本）
 - 数据隔离：所有用户数据存在本机，不上传服务器
 - 浏览器自动化测试（可选）：`npm i -D @playwright/cli` 后
   `playwright-cli open http://localhost:8765 --browser=chrome` 可做端到端验证
 - API Key：仅 localStorage 直存（注意个人使用，不要分享 state）
+- 插件 → 本地应用参数：`http://localhost:8765/?jd=<编码后的 JD 文本>`

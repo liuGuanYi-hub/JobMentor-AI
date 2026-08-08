@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "简历专家 · 一键发送 JD",
+  "version": "1.0.0",
+  "description": "选中招聘网站上的 JD 文本，一键发送到「简历专家」本地应用生成定制简历。",
+  "permissions": ["contextMenus", "activeTab", "scripting"],
+  "host_permissions": ["http://localhost:8765/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "简历专家",
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

@@ -6,6 +6,7 @@ import { renderSidebar, updateProgress } from "./ui/progress.js";
 import { showModal, closeModal, confirm } from "./ui/modal.js";
 import { toast } from "./ui/toast.js";
 import { setScore } from "./ui/score-ring.js";
+import { initTaskbar, refreshTaskLabel } from "./ui/taskbar.js";
 import { renderStep1 } from "./steps/step1-input.js";
 import { renderStep2 } from "./steps/step2-jd-parse.js";
 import { renderStep3 } from "./steps/step3-diagnose.js";
@@ -46,6 +47,9 @@ function init() {
 
   const initial = router.init();
   renderSidebar();
+
+  // 浏览器插件注入 JD（?jd=xxx）：需在 step1 渲染前写入 store
+  const injectedJd = handleJdParam();
   onStepChange(initial);
 
   // 顶部栏事件
@@ -55,6 +59,9 @@ function init() {
     if ((store.get("doneSteps") || []).includes(3)) router.go(3);
     else toast("请先完成简历诊断", "info");
   });
+
+  // 任务管理
+  initTaskbar();
 
   // API Key 按钮
   document.getElementById("apiKeyBtn")?.addEventListener("click", openApiKeyModal);
@@ -70,6 +77,7 @@ function init() {
     const d = store.get("diagnose");
     setScore(d?.overall ?? null);
     renderSidebar();
+    refreshTaskLabel();
   });
 }
 
@@ -101,17 +109,40 @@ async function onStepChange(stepNum) {
 
 async function handleRestart() {
   if (await confirm({
-    title: "重新开始？",
-    message: "将清除当前所有进度、API Key 与 AI 分析结果。此操作不可恢复。",
-    confirmText: "清空并重新开始",
+    title: "重新开始当前任务？",
+    message: "将清空当前任务的输入与全部 AI 分析结果（其他任务不受影响）。此操作不可恢复。",
+    confirmText: "清空当前任务",
     danger: true,
   })) {
-    store.reset();
+    store.resetTask();
     setScore(null);
     renderSidebar();
     router.go(1, { skipHash: false });
-    toast("已重置", "success");
+    toast("当前任务已重置", "success");
     checkRestoreBanner();
+  }
+}
+
+// 处理浏览器插件传入的 ?jd= 参数：自动填充到当前任务的 JD 文本
+function handleJdParam() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const jd = params.get("jd");
+    if (!jd || !jd.trim()) return false;
+
+    // 写入当前任务
+    store.set({ input: { jdText: jd.trim() } });
+    // 清理 URL 参数（避免刷新重复注入）
+    if (window.history.replaceState) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("jd");
+      window.history.replaceState({}, "", url.toString());
+    }
+    toast("已从浏览器插件接收 JD（长度 " + jd.length + " 字）", "success");
+    return true;
+  } catch (e) {
+    console.warn("JD param handling failed", e);
+    return false;
   }
 }
 

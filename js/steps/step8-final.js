@@ -2,6 +2,7 @@
 
 import { store } from "../store.js";
 import { toast } from "../ui/toast.js";
+import { showModal, closeModal, confirm } from "../ui/modal.js";
 import { exportElementToPdf, buildFullReportHtml } from "../export/pdf.js";
 import { exportResumeToDocx } from "../export/docx.js";
 
@@ -36,8 +37,23 @@ export async function renderStep8(container) {
 
     <div class="template-tabs">
       <button class="template-tab active" data-tab="resume">增强简历</button>
+      <button class="template-tab" data-tab="versions">版本管理</button>
       <button class="template-tab" data-tab="compare">面试对照</button>
       <button class="template-tab" data-tab="tech">技术词汇</button>
+    </div>
+
+    <!-- 版本管理面板 -->
+    <div class="section-card hidden" id="versionPanel">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>简历版本管理</span>
+        <button class="ghost-btn" id="newVersionBtn">
+          <i data-lucide="copy-plus" width="14"></i>
+          <span>快照当前版本</span>
+        </button>
+      </div>
+      <p class="text-muted" style="font-size:12px;">为同一份简历保存多个定制版本（如不同岗位方向），可切换预览、并排对比。</p>
+      <div class="version-list" id="versionList"></div>
+      <div class="version-compare" id="versionCompare"></div>
     </div>
 
     <!-- 模板画廊 -->
@@ -350,8 +366,22 @@ function bindEvents(container, config) {
     tab.addEventListener("click", () => {
       container.querySelectorAll(".template-tab").forEach(t => t.classList.remove("active"));
       tab.classList.add("active");
-      toast(`「${tab.textContent}」视图开发中…`, "info");
+      const tabName = tab.getAttribute("data-tab");
+      const versionPanel = container.querySelector("#versionPanel");
+      if (versionPanel) {
+        versionPanel.classList.toggle("hidden", tabName !== "versions");
+      }
+      if (tabName === "versions") {
+        renderVersionList(container);
+      } else if (tabName !== "resume") {
+        toast(`「${tab.textContent}」视图开发中…`, "info");
+      }
     });
+  });
+
+  // 版本管理
+  container.querySelector("#newVersionBtn")?.addEventListener("click", () => {
+    createVersion(container);
   });
 
   // 导出按钮
@@ -375,6 +405,222 @@ function bindEvents(container, config) {
       previewEl.className = `resume-preview template-${cur.template}`;
       previewEl.innerHTML = buildPreviewHTML(cur, input, optimize, jdAnalysis);
     }
+  }
+
+  // 渲染版本列表
+  function renderVersionList(c) {
+    const listEl = c.querySelector("#versionList");
+    if (!listEl) return;
+    const versions = store.resumeVersions;
+    const currentId = store.currentVersionId;
+
+    if (!versions.length) {
+      listEl.innerHTML = `
+        <div style="padding:20px;text-align:center;color:var(--text-3);font-size:12px;">
+          暂无版本，点击上方「快照当前版本」保存第一个版本
+        </div>
+      `;
+      renderVersionCompare(c, []);
+      return;
+    }
+
+    listEl.innerHTML = versions.map(v => `
+      <div class="version-item ${v.id === currentId ? "active" : ""}" data-version="${v.id}">
+        <div class="version-item-info">
+          <div class="version-item-name">${esc(v.name)}</div>
+          <div class="version-item-meta">${formatTime(v.createdAt)} · ${v.snapshot?.optimizeSelected?.length || 0} 个区块</div>
+        </div>
+        <div class="version-item-actions">
+          <button class="version-item-action" data-action="compare" title="对比">
+            <i data-lucide="columns-2" width="13"></i>
+          </button>
+          <button class="version-item-action" data-action="rename" title="重命名">
+            <i data-lucide="pencil" width="13"></i>
+          </button>
+          <button class="version-item-action danger" data-action="delete" title="删除">
+            <i data-lucide="trash-2" width="13"></i>
+          </button>
+        </div>
+      </div>
+    `).join("");
+    if (window.lucide) window.lucide.createIcons();
+
+    // 绑定
+    listEl.querySelectorAll(".version-item").forEach(item => {
+      const vid = item.getAttribute("data-version");
+      item.addEventListener("click", (e) => {
+        if (e.target.closest("[data-action]")) return;
+        applyVersion(vid, c);
+      });
+      item.querySelector('[data-action="compare"]')?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        renderVersionCompare(c, versions);
+      });
+      item.querySelector('[data-action="rename"]')?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        renameVersion(vid, c);
+      });
+      item.querySelector('[data-action="delete"]')?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        deleteVersion(vid, c);
+      });
+    });
+
+    // 默认对比当前与最新
+    if (versions.length >= 1) renderVersionCompare(c, versions);
+  }
+
+  // 应用版本：恢复 resumeConfig + optimize 选中项
+  function applyVersion(vid, c) {
+    const version = store.resumeVersions.find(v => v.id === vid);
+    if (!version) return;
+    store.switchResumeVersion(vid);
+
+    // 恢复 resumeConfig
+    const snap = version.snapshot || {};
+    if (snap.resumeConfig) {
+      store.set({ resumeConfig: snap.resumeConfig });
+    }
+    // 恢复 optimize 选中项
+    const optimize = store.get("optimize");
+    if (optimize && snap.optimizeSelected && optimize.sections) {
+      const byType = {};
+      snap.optimizeSelected.forEach(sec => { byType[sec.type] = sec; });
+      optimize.sections.forEach(sec => {
+        const snapSec = byType[sec.type];
+        if (!snapSec) return;
+        (sec.items || []).forEach((it, idx) => {
+          const snapItem = snapSec.items && snapSec.items[idx];
+          if (snapItem && snapItem.selectedVariant) {
+            it.selectedVariant = snapItem.selectedVariant;
+          }
+        });
+      });
+      store.replace("optimize", optimize);
+    }
+    renderVersionList(c);
+    rerenderPreview(c);
+    syncVersionUi(c, snap);
+    toast(`已应用版本「${version.name}」`, "success");
+  }
+
+  // 同步版本快照相关的 UI（备注、模板、颜色选中态）
+  function syncVersionUi(c, snap) {
+    const rc = snap.resumeConfig || {};
+    const noteEl = c.querySelector("#resumeNote");
+    if (noteEl) noteEl.value = rc.note || "";
+    const templateCard = c.querySelector(`.template-card[data-template="${rc.template}"]`);
+    c.querySelectorAll(".template-card").forEach(t => t.classList.remove("active"));
+    if (templateCard) templateCard.classList.add("active");
+    c.querySelectorAll(".color-swatch").forEach(sw => {
+      sw.classList.toggle("active", sw.getAttribute("data-color") === rc.color);
+    });
+    const avatarCheck = c.querySelector("#showAvatar");
+    if (avatarCheck) avatarCheck.checked = !!rc.showAvatar;
+  }
+
+  // 新建版本快照
+  function createVersion(c) {
+    const versions = store.resumeVersions;
+    const n = versions.length + 1;
+    store.createResumeVersion(`V${n} 快照`);
+    renderVersionList(c);
+    toast("已保存版本快照", "success");
+  }
+
+  function renameVersion(vid, c) {
+    const version = store.resumeVersions.find(v => v.id === vid);
+    if (!version) return;
+    showVersionModal(version.name, (name) => {
+      store.renameResumeVersion(vid, name);
+      renderVersionList(c);
+      toast("已重命名", "success");
+    });
+  }
+
+  async function deleteVersion(vid, c) {
+    const ok = await confirm({
+      title: "删除版本？",
+      message: "删除该版本快照后不可恢复。",
+      confirmText: "删除",
+      danger: true,
+    });
+    if (!ok) return;
+    if (store.deleteResumeVersion(vid)) {
+      renderVersionList(c);
+      rerenderPreview(c);
+      toast("版本已删除", "success");
+    } else {
+      toast("至少需要保留一个版本", "warning");
+    }
+  }
+
+  // 并排对比（带真实 diff 标记）
+  function renderVersionCompare(c, versions) {
+    const cmp = c.querySelector("#versionCompare");
+    if (!cmp) return;
+    if (!versions || versions.length < 2) {
+      cmp.classList.remove("active");
+      cmp.innerHTML = "";
+      return;
+    }
+    const currentId = store.currentVersionId;
+    const others = versions.filter(v => v.id !== currentId);
+    const a = versions.find(v => v.id === currentId) || versions[0];
+    const b = others[0] || versions[1];
+
+    // 计算差异集合（按优化区块的 value 文本对比）
+    const aLines = flattenLines(a);
+    const bLines = flattenLines(b);
+    const diffA = new Set(aLines);
+    const diffB = new Set(bLines);
+
+    cmp.classList.add("active");
+    cmp.innerHTML = `
+      <div class="compare-legend">
+        <span class="lg diff">有差异</span>
+        <span class="lg same">相同</span>
+      </div>
+      <div class="compare-grid">
+        <div class="compare-col">
+          <div class="compare-col-head">${esc(a.name)}</div>
+          <div class="compare-col-body">${renderCompareBody(a, diffB, aLines, bLines)}</div>
+        </div>
+        <div class="compare-col">
+          <div class="compare-col-head">${esc(b.name)}</div>
+          <div class="compare-col-body">${renderCompareBody(b, diffA, bLines, aLines)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 提取版本的所有 bullet 文本集合（用于 diff）
+  function flattenLines(version) {
+    const lines = [];
+    const sections = version.snapshot?.optimizeSelected || [];
+    sections.forEach(sec => {
+      (sec.items || []).forEach(it => {
+        if (it.value) lines.push(it.value);
+      });
+    });
+    return lines;
+  }
+
+  function renderCompareBody(version, otherLineSet, ownLines, otherLines) {
+    const snap = version.snapshot || {};
+    const sections = snap.optimizeSelected || [];
+    if (!sections.length) return `<div class="text-muted">（该版本无优化数据）</div>`;
+    return sections.map(sec => `
+      <div class="cmp-section">
+        <div class="cmp-section-title">${esc(sec.title || sec.type)}</div>
+        ${(sec.items || []).map(it => {
+          const val = it.value || "";
+          // 该行是否在另一版本中相同存在 → same；否则 diff
+          const isSame = otherLineSet.has(val);
+          return `<div class="cmp-line ${isSame ? "same" : "diff"}">${esc(val)}</div>`;
+        }).join("")}
+      </div>
+    `).join("");
   }
 }
 
@@ -476,4 +722,43 @@ function parseExperienceBlock(sec) {
 function esc(s) {
   if (s == null) return "";
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function formatTime(ts) {
+  if (!ts) return "";
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60 * 1000) return "刚刚";
+  if (diff < 60 * 60 * 1000) return `${Math.floor(diff / 60000)} 分钟前`;
+  if (diff < 24 * 60 * 60 * 1000) return `${Math.floor(diff / 3600000)} 小时前`;
+  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+function showVersionModal(currentName, onSave) {
+  showModal({
+    title: "重命名版本",
+    body: `
+      <div class="form-group">
+        <label class="label">版本名称</label>
+        <input class="input" id="versionNameInput" value="${escAttr(currentName)}" />
+      </div>
+    `,
+    footer: `
+      <button class="ghost-btn" data-action="cancel">取消</button>
+      <button class="primary-btn" data-action="confirm">保存</button>
+    `,
+  });
+  const root = document.querySelector(".modal-root.active");
+  if (!root) return;
+  root.querySelector('[data-action="cancel"]').addEventListener("click", () => closeModal());
+  root.querySelector('[data-action="confirm"]').addEventListener("click", () => {
+    const name = root.querySelector("#versionNameInput")?.value.trim();
+    closeModal();
+    onSave(name);
+  });
+}
+
+function escAttr(s) {
+  return esc(s).replace(/'/g, "&#039;");
 }
