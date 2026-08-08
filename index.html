@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>简历专家 · JD 定制简历优化 Agent</title>
+  <meta name="description" content="基于目标岗位 JD · 诊断 · 匹配 · 优化 · 面试准备" />
+
+  <!-- 第三方库（CDN）-->
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docx@7.8.2/build/index.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+
+  <link rel="stylesheet" href="./css/base.css" />
+  <link rel="stylesheet" href="./css/layout.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/steps.css" />
+  <link rel="stylesheet" href="./css/templates.css" />
+</head>
+<body>
+  <!-- 顶部栏 -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo">简</div>
+      <div class="brand-meta">
+        <span class="brand-name">简历专家</span>
+        <span class="brand-sub">JD 定制简历优化 Agent</span>
+      </div>
+      <span class="ai-pill">AI 模式</span>
+    </div>
+    <div class="topbar-meta">
+      <span class="topbar-tip">基于目标岗位 JD · 诊断 · 匹配 · 优化 · 面试准备</span>
+      <button class="ghost-btn" id="apiKeyBtn" title="设置 DeepSeek API Key">
+        <i data-lucide="key" width="14"></i>
+        <span id="apiKeyStatus">未设置</span>
+      </button>
+      <button class="ghost-btn" id="restartBtn" title="重新开始">
+        <i data-lucide="refresh-ccw" width="14"></i>
+        <span>重新开始</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 主体：左侧导航 + 右侧内容 -->
+  <main class="main-shell">
+    <aside class="sidebar">
+      <div class="step-header">
+        <span class="step-header-label">分析流程</span>
+        <span class="step-header-count"><span id="doneCount">0</span>/8</span>
+        <div class="step-progress-bar"><div class="step-progress-fill" id="stepProgressFill"></div></div>
+      </div>
+
+      <nav class="step-nav" id="stepNav">
+        <!-- 由 app.js 渲染 -->
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="score-card" id="scoreCard">
+          <div class="score-text">
+            <span class="score-label">匹配综合得分</span>
+            <a class="score-link" href="#" id="viewFullScore">查看全文 ›</a>
+          </div>
+          <div class="score-row">
+            <span class="score-num" id="scoreNum">--</span>
+            <span class="score-total">/ 100 分</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="content" id="content">
+      <!-- 由 router.js 加载当前步骤 -->
+      <div class="loading-tip">正在加载…</div>
+    </section>
+  </main>
+
+  <!-- Toast 容器 -->
+  <div id="toastRoot" class="toast-root"></div>
+
+  <!-- Modal 容器 -->
+  <div id="modalRoot" class="modal-root"></div>
+
+  <!-- 状态恢复 banner -->
+  <div id="restoreBanner" class="restore-banner hidden">
+    <span>检测到你上次未完成的分析任务（已完成 <b id="restoreStep">0</b>/8 步），是否恢复？</span>
+    <div class="restore-actions">
+      <button class="ghost-btn" id="restoreDismiss">忽略</button>
+      <button class="primary-btn" id="restoreConfirm">恢复进度</button>
+    </div>
+  </div>
+
+  <!-- 模块入口 -->
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

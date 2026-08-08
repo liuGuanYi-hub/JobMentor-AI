@@ -1,0 +1,314 @@
+/* templates.css — 5 套简历模板的可视缩略与预览样式 */
+
+/* 模板缩略图装饰 */
+.thumb-decor {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 8px;
+  font-size: 7px;
+  line-height: 1.5;
+  background: #fff;
+  overflow: hidden;
+}
+
+.thumb-decor .t-line {
+  background: var(--text-3);
+  height: 3px;
+  border-radius: 1px;
+  margin-bottom: 3px;
+}
+
+.thumb-decor .t-line.short { width: 60%; }
+.thumb-decor .t-line.shorter { width: 40%; }
+.thumb-decor .t-line.medium { width: 75%; }
+
+.thumb-decor .t-block {
+  background: var(--bg);
+  border-radius: 2px;
+  flex: 1;
+  margin-bottom: 3px;
+}
+
+/* Template 1: 简约现代卡片 */
+.thumb-modern {
+  background: #fff;
+}
+.thumb-modern .t-header {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--text-3);
+}
+.thumb-modern .t-avatar {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #5B6CFF;
+  flex-shrink: 0;
+}
+.thumb-modern .t-info { flex: 1; }
+.thumb-modern .t-info .t-line { margin-bottom: 2px; }
+
+/* Template 2: 时间轴 */
+.thumb-timeline {
+  background: #fff;
+}
+.thumb-timeline .t-header {
+  text-align: center;
+  margin-bottom: 6px;
+}
+.thumb-timeline .t-tl-item {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.thumb-timeline .t-tl-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #5B6CFF;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.thumb-timeline .t-tl-content {
+  flex: 1;
+  height: 14px;
+  background: var(--bg);
+  border-radius: 2px;
+}
+
+/* Template 3: 经典 header */
+.thumb-classic {
+  background: #fff;
+}
+.thumb-classic .t-header {
+  background: #5B6CFF;
+  height: 24px;
+  border-radius: 0 0 4px 4px;
+  margin: -6px -8px 6px;
+  padding: 4px 8px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 8px;
+}
+.thumb-classic .t-section {
+  background: var(--bg);
+  border-radius: 2px;
+  flex: 1;
+  margin-bottom: 4px;
+}
+
+/* Template 4: 双栏卡片 */
+.thumb-doublecol {
+  background: #fff;
+}
+.thumb-doublecol .t-cols {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+.thumb-doublecol .t-col {
+  flex: 1;
+  background: var(--bg);
+  border-radius: 2px;
+}
+
+/* Template 5: 经典综合稿件 */
+.thumb-comprehensive {
+  background: #fff;
+}
+.thumb-comprehensive .t-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.thumb-comprehensive .t-block2 {
+  flex: 1;
+  background: var(--bg);
+  border-radius: 2px;
+  height: 22px;
+}
+
+/* GitHub Style 模板 */
+.thumb-github {
+  background: #fff;
+  font-family: monospace;
+}
+.thumb-github .t-header {
+  background: #24292e;
+  margin: -6px -8px 6px;
+  padding: 4px 8px;
+  color: #fff;
+  font-size: 7px;
+  font-weight: 600;
+}
+.thumb-github .t-code-line {
+  height: 2px;
+  background: var(--text-3);
+  margin-bottom: 2px;
+  border-radius: 1px;
+}
+.thumb-github .t-code-line.green { background: #22863a; }
+.thumb-github .t-code-line.purple { background: #6f42c1; }
+
+/* AI 工具稿件 */
+.thumb-ai {
+  background: linear-gradient(180deg, #fff 0%, #f0f4ff 100%);
+}
+.thumb-ai .t-ai-head {
+  background: var(--primary-light);
+  margin: -6px -8px 6px;
+  padding: 6px 8px;
+}
+.thumb-ai .t-ai-tag {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  font-size: 6px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  margin-right: 2px;
+}
+
+/* ===== 模板预览区样式 ===== */
+/* 应用到 .resume-preview.template-* 容器 */
+
+/* 默认（modern）样式已在 steps.css */
+
+/* Template 2: 时间轴 */
+.resume-preview.template-timeline .preview-section {
+  position: relative;
+  padding-left: var(--gap-4);
+  border-left: 2px solid var(--accent-color, var(--primary));
+}
+
+.resume-preview.template-timeline .preview-section-title {
+  margin-bottom: var(--gap-4);
+}
+
+.resume-preview.template-timeline .timeline-item {
+  position: relative;
+  padding-bottom: var(--gap-4);
+}
+
+.resume-preview.template-timeline .timeline-item::before {
+  content: "";
+  position: absolute;
+  left: calc(-1 * var(--gap-4) - 5px);
+  top: 8px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-color, var(--primary));
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px var(--accent-color, var(--primary));
+}
+
+.resume-preview.template-timeline .timeline-period {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-bottom: var(--gap-1);
+  font-weight: 600;
+}
+
+/* Template 3: 经典 header */
+.resume-preview.template-classic .preview-header {
+  background: var(--accent-color, var(--primary));
+  color: #fff;
+  margin: calc(-1 * var(--gap-5)) calc(-1 * var(--gap-5)) var(--gap-5);
+  padding: var(--gap-5);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: none;
+}
+
+.resume-preview.template-classic .preview-name,
+.resume-preview.template-classic .preview-contact {
+  color: #fff;
+}
+
+.resume-preview.template-classic .preview-section-title {
+  color: var(--accent-color, var(--primary));
+}
+
+.resume-preview.template-classic .preview-section-title::before {
+  background: var(--accent-color, var(--primary));
+}
+
+/* Template 4: 双栏 */
+.resume-preview.template-doublecol .preview-body {
+  display: grid;
+  grid-template-columns: 30% 1fr;
+  gap: var(--gap-5);
+}
+
+.resume-preview.template-doublecol .preview-aside {
+  background: var(--bg);
+  margin: calc(-1 * var(--gap-5));
+  padding: var(--gap-5);
+}
+
+/* Template 5: 综合稿件 */
+.resume-preview.template-comprehensive .preview-section-title {
+  background: var(--accent-color, var(--primary));
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: var(--gap-3);
+}
+
+.resume-preview.template-comprehensive .preview-section-title::before {
+  display: none;
+}
+
+/* GitHub Style */
+.resume-preview.template-github {
+  font-family: var(--font-mono);
+  background: #f6f8fa;
+}
+
+.resume-preview.template-github .preview-header {
+  background: #24292e;
+  color: #fff;
+  margin: calc(-1 * var(--gap-5)) calc(-1 * var(--gap-5)) var(--gap-5);
+  padding: var(--gap-4) var(--gap-5);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: none;
+  font-family: var(--font-mono);
+}
+
+.resume-preview.template-github .preview-name,
+.resume-preview.template-github .preview-contact {
+  color: #fff;
+}
+
+.resume-preview.template-github .preview-section-title {
+  font-family: var(--font-mono);
+  color: #24292e;
+}
+
+.resume-preview.template-github .preview-section-title::before {
+  display: none;
+}
+
+.resume-preview.template-github .preview-bullet::before {
+  content: "+ ";
+  color: #22863a;
+}
+
+/* AI 工具稿件 */
+.resume-preview.template-ai {
+  background: linear-gradient(180deg, #fff 0%, #f0f4ff 100%);
+}
+
+.resume-preview.template-ai .preview-header {
+  background: var(--primary-light);
+  margin: calc(-1 * var(--gap-5)) calc(-1 * var(--gap-5)) var(--gap-5);
+  padding: var(--gap-5);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  border-bottom: none;
+}
