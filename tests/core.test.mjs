@@ -1,0 +1,170 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import {
+  redact,
+  restore,
+  restoreTree,
+  detect,
+  mergeMaps,
+} from "../js/privacy.js";
+import {
+  chatCompletions,
+  chatJson,
+  checkApiKey,
+  estimateInputTokens,
+} from "../js/ai/deepseek.js";
+import { runFullAnalysis } from "../js/ai/full-analysis.js";
+import { store } from "../js/store.js";
+
+function response(status, body) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    text: async () => body,
+    json: async () => JSON.parse(body),
+  };
+}
+
+test("隐私脱敏支持往返还原和嵌套 AI 结果还原", () => {
+  const source = "联系人：13812345678，邮箱：demo@example.com，身份证：110101199001011234。";
+  const first = redact(source);
+  const second = redact("备用联系人：13912345678");
+  const map = mergeMaps(first.map, second.map);
+
+  assert.notEqual(first.redacted, source);
+  assert.equal(restore(first.redacted, first.map), source);
+  assert.deepEqual(detect(source), {
+    phone: ["13812345678"],
+    email: ["demo@example.com"],
+    idCard: ["110101199001011234"],
+  });
+  assert.deepEqual(restoreTree({ nested: [first.redacted, second.redacted] }, map), {
+    nested: [source, "备用联系人：13912345678"],
+  });
+});
+
+test("DeepSeek JSON 非法输出会自动重试并解析", async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (_url, options) => {
+    calls.push(JSON.parse(options.body));
+    return calls.length === 1
+      ? response(200, JSON.stringify({ choices: [{ message: { content: "不是 JSON" } }] }))
+      : response(200, JSON.stringify({ choices: [{ message: { content: '{"ok":true}' } }] }));
+  };
+  try {
+    const result = await chatJson({ apiKey: "TEST_TOKEN", messages: [], maxRetries: 0, timeoutMs: 200 });
+    assert.deepEqual(result, { ok: true });
+    assert.equal(calls.length, 2);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("DeepSeek HTTP 错误会分类且不暴露完整响应", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => response(401, '{"error":{"message":"invalid key"}}');
+  try {
+    await assert.rejects(
+      () => chatCompletions({ apiKey: "TEST_TOKEN", messages: [], maxRetries: 1, timeoutMs: 200 }),
+      (error) => error.code === "HTTP_401" && error.status === 401 && error.message.includes("API Key 无效") && !error.message.includes("invalid key"),
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("DeepSeek 请求和 Key 连通性测试都具备超时边界", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (_url, { signal }) => new Promise((_resolve, reject) => {
+    signal.addEventListener("abort", () => {
+      const error = new Error("aborted");
+      error.name = "AbortError";
+      reject(error);
+    }, { once: true });
+  });
+  try {
+    await assert.rejects(
+      () => chatCompletions({ apiKey: "TEST_TOKEN", messages: [], maxRetries: 0, timeoutMs: 10 }),
+      (error) => error.code === "TIMEOUT",
+    );
+    await assert.rejects(
+      () => checkApiKey({ apiKey: "TEST_TOKEN", timeoutMs: 10 }),
+      (error) => error.code === "TIMEOUT",
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("输入材料 token 估算能覆盖 JD、简历和补充信息", () => {
+  const tokens = estimateInputTokens({ jdText: "岗位".repeat(100), resumeText: "简历".repeat(100), supplement: "补充".repeat(100) });
+  assert.ok(tokens > 0);
+});
+
+test("Store v2 可以隔离任务和简历版本", async () => {
+  class MemoryStorage {
+    #data = new Map();
+    getItem(key) { return this.#data.get(key) ?? null; }
+    setItem(key, value) { this.#data.set(key, String(value)); }
+    removeItem(key) { this.#data.delete(key); }
+  }
+  globalThis.localStorage = new MemoryStorage();
+  if (!globalThis.CustomEvent) {
+    globalThis.CustomEvent = class extends Event {
+      constructor(type, init = {}) { super(type); this.detail = init.detail; }
+    };
+  }
+  const { store } = await import(`../js/store.js?test=${Date.now()}`);
+  store.load();
+  const firstId = store.currentTaskId;
+  store.set({ input: { target: "安卓开发" } });
+  const secondId = store.createTask("后端开发");
+  assert.notEqual(firstId, secondId);
+  assert.equal(store.get("input.target"), "");
+  store.switchTask(firstId);
+  assert.equal(store.get("input.target"), "安卓开发");
+  store.set({ optimize: { sections: [{ type: "summary", items: [{ authentic: "原始版本" }] }] } });
+  const version = store.createResumeVersion("V1");
+  assert.equal(store.resumeVersions.length, 1);
+  assert.equal(version.snapshot.optimizeSelected[0].items[0].value, "原始版本");
+});
+
+test("全量分析按依赖顺序请求一次并复用已缓存结果", async () => {
+  class MemoryStorage {
+    #data = new Map();
+    getItem(key) { return this.#data.get(key) ?? null; }
+    setItem(key, value) { this.#data.set(key, String(value)); }
+    removeItem(key) { this.#data.delete(key); }
+  }
+  globalThis.localStorage = new MemoryStorage();
+  store.load();
+  store.set({ settings: { apiKey: "TEST_TOKEN" }, input: { jdText: "JD", resumeText: "Resume" } });
+
+  const responses = [
+    { responsibilities: [], hardRequirements: [], hiddenRequirements: [], keywords: [], candidateProfile: "", coreCompetencies: [] },
+    { overall: 80, dimensions: [], issues: [], recommendations: [] },
+    { rows: [] },
+    { questions: [] },
+    { sections: [] },
+    { selfIntro: "", behaviorQuestions: [], techQuestions: [], skills: [], dataPoints: [] },
+  ];
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  globalThis.fetch = async () => ({
+    ok: true,
+    status: 200,
+    json: async () => ({ choices: [{ message: { content: JSON.stringify(responses[calls++]) } }] }),
+    text: async () => "",
+  });
+  try {
+    await runFullAnalysis();
+    assert.equal(calls, 6);
+    await runFullAnalysis();
+    assert.equal(calls, 6);
+    assert.deepEqual(store.get("doneSteps"), [2, 3, 4, 5, 6, 7]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

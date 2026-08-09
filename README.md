@@ -22,7 +22,7 @@ node dev-server.mjs
 # 默认 8765 端口，可用环境变量改：PORT=9000 node dev-server.mjs
 ```
 
-打开浏览器访问 `http://localhost:8080` 即可。
+项目自带服务器默认监听 `http://localhost:8765`；如果使用上面的 Python 或 `serve` 命令，请按实际端口访问。
 
 ### 2. 设置 DeepSeek API Key
 
@@ -37,7 +37,7 @@ node dev-server.mjs
 - **多任务管理**：本地保存多份分析任务（不同岗位/公司），可新建/切换/重命名/删除，数据完全隔离
 - **简历版本对比**：同一份简历保存多个定制版本（不同岗位方向），并排 diff 对比，一键应用
 - **隐私脱敏**：手机号 / 邮箱 / 身份证 自动替换为占位符，AI 返回后还原
-- **多模板导出**：5 套简历模板（时间轴 / 经典 / 双栏 / GitHub / AI）+ 主题色 + 头像
+- **多模板导出**：7 套简历模板（简约现代 / 时间轴 / 经典 / 双栏 / 综合 / GitHub / AI）+ 主题色 + 头像
 - **多种导出格式**：复制精简文本 / 导出 PDF / 导出 Word / 全量综合报告 PDF / JD 解析 PDF
 - **PDF / Word 简历解析**：前端本地解析，不上传服务器
 - **状态恢复**：未完成的进度自动保存到 localStorage，下次打开可恢复
@@ -62,49 +62,54 @@ node dev-server.mjs
 JobMentor AI/
 ├── index.html                  # 单页入口
 ├── dev-server.mjs              # 本地静态服务器（node 自带）
+├── package.json                # 本地测试命令（无运行时依赖）
 ├── README.md                   # 本文档
 ├── css/
 │   ├── base.css                # 变量、reset、字体
 │   ├── layout.css              # 整体栅格
 │   ├── components.css          # 通用组件
 │   ├── steps.css               # 8 步专属样式
-│   └── templates.css           # 5 套简历模板样式
-└── js/
-    ├── app.js                  # 入口
-    ├── store.js                # localStorage 状态
-    ├── router.js               # 步骤路由
-    ├── privacy.js              # 隐私脱敏
-    ├── ai/
-    │   ├── deepseek.js         # API 客户端
-    │   └── prompts.js          # 8 步 Prompt 模板
-    ├── parsers/
-    │   ├── pdf.js              # PDF 解析
-    │   └── docx.js             # DOCX 解析
-    ├── export/
-    │   ├── pdf.js              # PDF 导出 + 报告 HTML 构建
-    │   ├── docx.js             # Word 导出
-    │   └── report.js           # 全量综合报告导出（复用入口）
-    ├── ui/
-    │   ├── toast.js
-    │   ├── modal.js
-    │   ├── score-ring.js
-    │   ├── progress.js
-    │   └── taskbar.js           # 顶部任务下拉菜单（多任务管理）
-    └── steps/
-        ├── step1-input.js      # 输入材料
-        ├── step2-jd-parse.js   # JD 解析
-        ├── step3-diagnose.js   # 简历诊断
-        ├── step4-match.js      # 匹配分析
-        ├── step5-deepdive.js   # 经历追问
-        ├── step6-optimize.js   # 简历优化
-        ├── step7-interview.js  # 面试准备
-        └── step8-final.js      # 最终简历（含版本管理）
-extension/                      # Chrome 浏览器插件（独立子工程）
-├── manifest.json               # MV3 清单
-├── background.js               # 右键菜单 → 打开本地应用
-├── content.js                  # 选中文本浮动按钮
-├── popup.html / popup.js       # 插件弹窗
-└── icons/                      # 16/48/128 图标
+│   └── templates.css           # 7 套简历模板样式
+├── js/
+│   ├── app.js                  # 入口
+│   ├── store.js                # localStorage 状态
+│   ├── router.js               # 步骤路由
+│   ├── privacy.js              # 隐私脱敏
+│   ├── ai/
+│   │   ├── deepseek.js         # API 客户端
+│   │   └── prompts.js          # 8 步 Prompt 模板
+│   ├── parsers/
+│   │   ├── pdf.js              # PDF 解析
+│   │   └── docx.js             # DOCX 解析
+│   ├── export/
+│   │   ├── pdf.js              # PDF 导出 + 报告 HTML 构建
+│   │   ├── docx.js             # Word 导出
+│   │   └── report.js           # 全量综合报告导出（复用入口）
+│   ├── ui/
+│   │   ├── toast.js
+│   │   ├── modal.js
+│   │   ├── score-ring.js
+│   │   ├── progress.js
+│   │   └── taskbar.js           # 顶部任务下拉菜单（多任务管理）
+│   └── steps/
+│       ├── step1-input.js      # 输入材料
+│       ├── step2-jd-parse.js   # JD 解析
+│       ├── step3-diagnose.js   # 简历诊断
+│       ├── step4-match.js      # 匹配分析
+│       ├── step5-deepdive.js   # 经历追问
+│       ├── step6-optimize.js   # 简历优化
+│       ├── step7-interview.js  # 面试准备
+│       └── step8-final.js      # 最终简历（含版本管理）
+├── extension/                  # Chrome 浏览器插件（独立子工程）
+│   ├── manifest.json           # MV3 清单
+│   ├── background.js           # 右键菜单 → 打开本地应用
+│   ├── content.js              # 选中文本浮动按钮
+│   ├── popup.html / popup.js   # 插件弹窗
+│   └── icons/                  # 16/48/128 图标
+└── tests/
+    ├── core.test.mjs           # 核心模块测试
+    ├── check-syntax.mjs        # JS 语法检查
+    └── browser-smoke.mjs       # 浏览器回归
 ```
 
 ## 浏览器插件安装（可选）
@@ -120,10 +125,23 @@ extension/                      # Chrome 浏览器插件（独立子工程）
 ## 开发备注
 
 - 所有 AI 调用走 DeepSeek `deepseek-chat` 模型
-- 强制 JSON 输出模式 + 失败自动重试
+- 强制 JSON 输出模式 + 非法 JSON 自动重试
+- AI 请求默认 60 秒超时，并对 API Key、额度、频率限制和服务端错误给出明确提示
+- 输入材料估算超过 12,000 tokens 时提示精简，超过 16,000 tokens 时阻止发起分析
 - localStorage key：`jobmentor-ai-v1`（v2 结构：多任务 + 多版本）
 - 数据隔离：所有用户数据存在本机，不上传服务器
 - 浏览器自动化测试（可选）：`npm i -D @playwright/cli` 后
   `playwright-cli open http://localhost:8765 --browser=chrome` 可做端到端验证
 - API Key：仅 localStorage 直存（注意个人使用，不要分享 state）
 - 插件 → 本地应用参数：`http://localhost:8765/?jd=<编码后的 JD 文本>`
+
+## 本地验证
+
+项目不依赖构建工具，使用 Node.js 内置测试完成核心模块验证：
+
+```bash
+npm test       # 隐私、DeepSeek 错误/超时、输入估算、Store 隔离
+npm run check  # 递归检查项目 JavaScript 语法
+```
+
+测试不会调用真实 DeepSeek API，也不会读取或输出本机 API Key；真实 API 验证请在本地设置 Key 后，通过页面右上角「测试连通性」执行。

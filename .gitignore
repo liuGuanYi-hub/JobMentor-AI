@@ -1,5 +1,6 @@
 # 依赖
 node_modules/
+.env
 
 # 测试残留
 .playwright-cli/

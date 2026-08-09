@@ -1,0 +1,10 @@
+{
+  "name": "jobmentor-ai",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/core.test.mjs",
+    "check": "node tests/check-syntax.mjs",
+    "smoke": "node tests/browser-smoke.mjs"
+  }
+}

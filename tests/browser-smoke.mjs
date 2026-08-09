@@ -1,0 +1,140 @@
+import assert from "node:assert/strict";
+import { chromium } from "playwright";
+
+const BASE_URL = "http://localhost:8765";
+const taskId = "t-browser-smoke";
+
+const task = {
+  id: taskId,
+  title: "浏览器回归任务",
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
+  input: {
+    target: "安卓开发",
+    industry: "互联网/软件工程",
+    companyScale: "中型企业",
+    companyScaleKey: "medium",
+    careerStage: "在校实习",
+    careerStageKey: "intern",
+    expectedCapability: "移动端开发",
+    avatar: null,
+    jdText: "负责 Android 客户端开发与性能优化",
+    resumeText: "使用 Kotlin 和 Jetpack Compose 完成移动端项目",
+    supplement: "关注可量化结果",
+  },
+  jdAnalysis: {
+    responsibilities: ["负责 Android 客户端开发"],
+    hardRequirements: ["Kotlin"],
+    hiddenRequirements: ["跨团队协作"],
+    keywords: ["Android", "Kotlin"],
+    candidateProfile: "能够独立完成移动端模块的候选人。",
+    coreCompetencies: [{ name: "移动端开发", importance: "高", description: "有真实项目经验" }],
+  },
+  diagnose: {
+    overall: 72,
+    dimensions: [{ name: "移动端开发经验", score: 70, reason: "有项目证据" }],
+    issues: ["量化结果不足"],
+    recommendations: ["补充性能指标"],
+  },
+  matchAnalysis: {
+    rows: [{ jdItem: "Android", evidence: "Kotlin 项目", strength: "强", needsSupplement: false, suggestion: "保留" }],
+  },
+  deepdive: {
+    questions: [{ id: "q1", prompt: "具体负责了什么？", hint: "说明结果", userAnswer: "完成模块", refinedBullet: "独立完成移动端模块" }],
+  },
+  optimize: {
+    sections: [{
+      type: "projectExperience",
+      title: "项目经历",
+      period: "2025.01 - 2026.01",
+      items: [{
+        label: "移动端模块",
+        original: "完成模块",
+        data: "完成模块并提升性能",
+        lead: "主导完成模块",
+        authentic: "独立完成移动端模块",
+        jdAligned: "基于 Kotlin 完成 Android 模块",
+        selectedVariant: "authentic",
+      }],
+    }],
+  },
+  interview: {
+    selfIntro: "我是一名有移动端项目经验的软件工程学生。",
+    behaviorQuestions: ["介绍一次项目协作经历"],
+    techQuestions: ["如何定位 Android 性能问题？"],
+    skills: ["项目类", "系统设计类"],
+    dataPoints: ["性能提升 30%"],
+  },
+  resumeConfig: { template: "timeline", color: "#5B6CFF", showAvatar: false, note: "" },
+  resumeVersions: [],
+  currentVersionId: null,
+  doneSteps: [1, 2, 3, 4, 5, 6, 7, 8],
+  currentStep: 8,
+};
+
+const state = {
+  version: 2,
+  lastActiveAt: Date.now(),
+  settings: { apiKey: "", privacyOn: true, themeColor: "#5B6CFF" },
+  tasks: { [taskId]: task },
+  currentTaskId: taskId,
+};
+
+const browser = await chromium.launch({ headless: true, channel: "chrome" });
+const context = await browser.newContext();
+const page = await context.newPage();
+const pageErrors = [];
+page.on("pageerror", (error) => pageErrors.push(error.message));
+
+try {
+  await page.addInitScript((initialState) => {
+    localStorage.setItem("jobmentor-ai-v1", JSON.stringify(initialState));
+  }, state);
+  await page.goto(`${BASE_URL}/#/step/8`, { waitUntil: "domcontentloaded" });
+  await page.waitForSelector("#resumePreview");
+
+  assert.equal(await page.locator(".template-card").count(), 7);
+  await page.locator('.template-card[data-template="github"]').click();
+  assert.ok((await page.locator("#resumePreview").getAttribute("class")).includes("template-github"));
+  assert.equal(await page.locator("#copyText").count(), 1);
+
+  await page.locator('.template-tab[data-tab="versions"]').click();
+  await page.waitForSelector("#newVersionBtn");
+  await page.locator("#newVersionBtn").click();
+  await page.waitForSelector(".version-item");
+  assert.equal(await page.locator(".version-item").count(), 1);
+  await page.locator('.version-item [data-action="rename"]').click();
+  await page.locator("#versionNameInput").fill("V1 · 浏览器回归");
+  await page.locator('.modal-root.active [data-action="confirm"]').click();
+  assert.ok((await page.locator(".version-item-name").textContent()).includes("浏览器回归"));
+
+  await page.locator("#taskBtn").click();
+  assert.equal(await page.locator(".task-item").count(), 1);
+  await page.locator("#newTaskBtn").click();
+  await page.locator("#newTaskName").fill("新建回归任务");
+  await page.locator('.modal-root.active [data-action="confirm"]').click();
+  await page.waitForSelector("#fJdText");
+  assert.equal(await page.locator("#taskBtnLabel").textContent(), "新建回归任务");
+  const uploadLayout = await page.locator("#resumeDrop").evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { display: getComputedStyle(element).display, width: rect.width, height: rect.height };
+  });
+  assert.equal(uploadLayout.display, "block");
+  assert.ok(uploadLayout.width > 500 && uploadLayout.height > 80);
+  assert.equal(await page.locator("#startAnalysis").count(), 1);
+  assert.equal(await page.locator("#fullAnalysisProgress").count(), 1);
+  await page.locator("#apiKeyBtn").click();
+  assert.equal(await page.locator("#apiKeyInput").isVisible(), true);
+  await page.locator('.modal-root.active [data-action="cancel"]').click();
+
+  const pluginPage = await context.newPage();
+  await pluginPage.goto(`${BASE_URL}/?jd=${encodeURIComponent("来自浏览器插件的 JD")}`, { waitUntil: "domcontentloaded" });
+  await pluginPage.waitForSelector("#fJdText");
+  assert.equal(await pluginPage.locator("#fJdText").inputValue(), "来自浏览器插件的 JD");
+  await pluginPage.close();
+
+  assert.deepEqual(pageErrors, []);
+  console.log("浏览器回归通过：7 套模板、版本快照、任务新建、API Key 弹窗、插件 JD 注入、无 pageerror");
+} finally {
+  await browser.close();
+}
