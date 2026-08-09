@@ -5,6 +5,8 @@ import { chatJson } from "./deepseek.js";
 import { PROMPTS, buildUserPayload } from "./prompts.js";
 import { redact, mergeMaps, restoreTree } from "../privacy.js";
 
+export const EXAMPLE_ANALYSIS_CACHE_KEY = "jobmentor-ai-example-analysis-v1";
+
 export const FULL_ANALYSIS_STEPS = [
   { step: 2, key: "jdAnalysis", label: "JD 解析", promptKey: "step2", temperature: 0.4 },
   { step: 3, key: "diagnose", label: "简历诊断", promptKey: "step3", temperature: 0.4 },
@@ -47,7 +49,54 @@ export async function runFullAnalysis({ onProgress = () => {} } = {}) {
     }
   }
 
+  saveExampleAnalysisCache();
+
   return FULL_ANALYSIS_STEPS.map(({ step, key, label }) => ({ step, key, label, status: "done" }));
+}
+
+export function loadExampleAnalysisCache() {
+  try {
+    const raw = localStorage.getItem(EXAMPLE_ANALYSIS_CACHE_KEY);
+    if (!raw) return null;
+    const cache = JSON.parse(raw);
+    const hasAllResults = FULL_ANALYSIS_STEPS.every(({ key }) => {
+      const result = cache.results?.[key];
+      return result !== null && result !== undefined;
+    });
+    return hasAllResults ? cache : null;
+  } catch (error) {
+    console.warn("Failed to load local example analysis cache", error);
+    return null;
+  }
+}
+
+export function saveExampleAnalysisCache() {
+  const input = store.get("input") || {};
+  const results = Object.fromEntries(FULL_ANALYSIS_STEPS.map(({ key }) => [key, store.get(key)]));
+  try {
+    localStorage.setItem(EXAMPLE_ANALYSIS_CACHE_KEY, JSON.stringify({
+      version: 1,
+      savedAt: Date.now(),
+      input: JSON.parse(JSON.stringify(input)),
+      results,
+    }));
+    return true;
+  } catch (error) {
+    console.warn("Failed to save local example analysis cache", error);
+    return false;
+  }
+}
+
+export function restoreExampleAnalysisCache() {
+  const cache = loadExampleAnalysisCache();
+  if (!cache) return false;
+  if (cache.input) store.set({ input: { ...cache.input, isExampleData: true } });
+  store.markStepDone(1);
+  for (const definition of FULL_ANALYSIS_STEPS) {
+    store.replace(definition.key, JSON.parse(JSON.stringify(cache.results[definition.key])));
+    store.markStepDone(definition.step);
+  }
+  return true;
 }
 
 async function runOneStep(definition, { apiKey, input, settings }) {

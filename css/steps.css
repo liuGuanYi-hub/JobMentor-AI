@@ -159,6 +159,44 @@
   border-color: var(--primary);
 }
 
+.full-analysis-progress-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-3);
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.full-analysis-progress-percent {
+  color: var(--primary);
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.full-analysis-meter {
+  height: 8px;
+  margin-top: var(--gap-2);
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--divider);
+}
+
+.full-analysis-meter-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary), #8b7cff);
+  transition: width 0.3s ease;
+}
+
+.full-analysis-progress-meta {
+  margin-top: 8px;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
 .full-analysis-progress-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1202,6 +1240,16 @@
   color: var(--text-3);
 }
 
+.step-loading::after {
+  width: min(280px, 80%);
+  height: 6px;
+  content: "";
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  background-size: 200% 100%;
+  animation: loading-bar 1.2s linear infinite;
+}
+
 .spinner {
   width: 32px;
   height: 32px;
@@ -1213,4 +1261,9 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes loading-bar {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
 }

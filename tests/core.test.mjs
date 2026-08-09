@@ -14,7 +14,11 @@ import {
   checkApiKey,
   estimateInputTokens,
 } from "../js/ai/deepseek.js";
-import { runFullAnalysis } from "../js/ai/full-analysis.js";
+import {
+  runFullAnalysis,
+  loadExampleAnalysisCache,
+  restoreExampleAnalysisCache,
+} from "../js/ai/full-analysis.js";
 import { store } from "../js/store.js";
 
 function response(status, body) {
@@ -168,9 +172,19 @@ test("全量分析按依赖顺序请求一次并复用已缓存结果", async ()
     assert.equal(calls, 6);
     assert.equal(requests[4].max_tokens, 6000);
     assert.deepEqual(requests[4].thinking, { type: "disabled" });
+    const cachedExample = loadExampleAnalysisCache();
+    assert.ok(cachedExample);
+    assert.equal(JSON.stringify(cachedExample).includes("TEST_TOKEN"), false);
+    assert.equal(Object.prototype.hasOwnProperty.call(cachedExample, "settings"), false);
+    for (const key of ["jdAnalysis", "diagnose", "matchAnalysis", "deepdive", "optimize", "interview"]) {
+      store.replace(key, null, { skipPersist: true });
+    }
+    store.set({ doneSteps: [] }, { skipPersist: true });
+    assert.equal(restoreExampleAnalysisCache(), true);
+    assert.deepEqual(store.get("doneSteps"), [1, 2, 3, 4, 5, 6, 7]);
     await runFullAnalysis();
     assert.equal(calls, 6);
-    assert.deepEqual(store.get("doneSteps"), [2, 3, 4, 5, 6, 7]);
+    assert.deepEqual(store.get("doneSteps"), [1, 2, 3, 4, 5, 6, 7]);
   } finally {
     globalThis.fetch = originalFetch;
   }

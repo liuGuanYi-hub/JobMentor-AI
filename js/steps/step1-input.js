@@ -8,7 +8,13 @@ import { detect } from "../privacy.js";
 import { parsePdf } from "../parsers/pdf.js";
 import { parseDocx } from "../parsers/docx.js";
 import { estimateInputTokens, INPUT_WARN_TOKENS, INPUT_MAX_TOKENS } from "../ai/deepseek.js";
-import { runFullAnalysis, FULL_ANALYSIS_STEPS } from "../ai/full-analysis.js";
+import {
+  runFullAnalysis,
+  FULL_ANALYSIS_STEPS,
+  loadExampleAnalysisCache,
+  saveExampleAnalysisCache,
+  restoreExampleAnalysisCache,
+} from "../ai/full-analysis.js";
 
 const INDUSTRY_TAGS = [
   "互联网/软件工程", "人工智能/AIGC", "互联网/SaaS", "芯片/半导体",
@@ -183,6 +189,14 @@ export async function renderStep1(container) {
     </div>
 
     <div class="full-analysis-progress card" id="fullAnalysisProgress" hidden>
+      <div class="full-analysis-progress-summary">
+        <span>当前进度</span>
+        <strong class="full-analysis-progress-percent" id="fullAnalysisProgressPercent">0%</strong>
+      </div>
+      <div class="full-analysis-meter" role="progressbar" aria-label="全量解析进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <span class="full-analysis-meter-fill" id="fullAnalysisProgressFill"></span>
+      </div>
+      <div class="full-analysis-progress-meta" id="fullAnalysisProgressMeta">等待开始…</div>
       <div class="card-title">正在准备全量分析</div>
       <div class="full-analysis-progress-list">
         ${FULL_ANALYSIS_STEPS.map(({ step, label }) => `<div class="full-analysis-progress-item" data-analysis-step="${step}"><span class="progress-status">待处理</span><span>${label}</span></div>`).join("")}
@@ -239,7 +253,7 @@ export async function renderStep1(container) {
       if (el) {
         el.addEventListener("input", () => {
           const value = el.value;
-          store.set({ input: { [key]: value } });
+          store.set({ input: { [key]: value, isExampleData: false } });
           updatePrivacyWarn(container, value);
           updateContextSize(container);
         });
@@ -250,7 +264,7 @@ export async function renderStep1(container) {
     container.querySelector("#fCompanyScale").addEventListener("change", (e) => {
       const key = e.target.value;
       const item = COMPANY_SCALES.find(s => s.key === key);
-      store.set({ input: { companyScaleKey: key, companyScale: item.label } });
+      store.set({ input: { companyScaleKey: key, companyScale: item.label, isExampleData: false } });
       updateCompanyTip(container);
     });
 
@@ -258,7 +272,7 @@ export async function renderStep1(container) {
     container.querySelector("#fCareerStage").addEventListener("change", (e) => {
       const key = e.target.value;
       const item = CAREER_STAGES.find(s => s.key === key);
-      store.set({ input: { careerStageKey: key, careerStage: item.label } });
+      store.set({ input: { careerStageKey: key, careerStage: item.label, isExampleData: false } });
       updateStageTip(container);
     });
 
@@ -267,7 +281,7 @@ export async function renderStep1(container) {
       chip.addEventListener("click", () => {
         const tag = chip.getAttribute("data-tag");
         container.querySelector("#fIndustry").value = tag;
-        store.set({ input: { industry: tag } });
+        store.set({ input: { industry: tag, isExampleData: false } });
         container.querySelectorAll("#industryTags .chip").forEach(c => c.classList.remove("active"));
         chip.classList.add("active");
       });
@@ -283,7 +297,7 @@ export async function renderStep1(container) {
       // 简易猜测
       const guess = INDUSTRY_TAGS.find(t => text.includes(t.split("/")[0])) || INDUSTRY_TAGS[0];
       container.querySelector("#fIndustry").value = guess;
-      store.set({ input: { industry: guess } });
+      store.set({ input: { industry: guess, isExampleData: false } });
       toast(`识别为：${guess}`, "success");
     });
 
@@ -321,7 +335,7 @@ export async function renderStep1(container) {
       if (!f) return;
       const reader = new FileReader();
       reader.onload = () => {
-        store.set({ input: { avatar: reader.result } });
+        store.set({ input: { avatar: reader.result, isExampleData: false } });
         toast("头像已上传", "success");
       };
       reader.readAsDataURL(f);
@@ -329,6 +343,30 @@ export async function renderStep1(container) {
 
     // 示例数据
     container.querySelector("#fillExampleBtn").addEventListener("click", () => {
+      const hasCurrentResults = FULL_ANALYSIS_STEPS.every(({ key }) => store.get(key));
+      if (!loadExampleAnalysisCache() && hasCurrentResults) saveExampleAnalysisCache();
+      if (loadExampleAnalysisCache() && restoreExampleAnalysisCache()) {
+        const cachedInput = store.get("input") || {};
+        const fields = [
+          ["#fTarget", "target"],
+          ["#fIndustry", "industry"],
+          ["#fExpected", "expectedCapability"],
+          ["#fJdText", "jdText"],
+          ["#fResumeText", "resumeText"],
+          ["#fSupplement", "supplement"],
+        ];
+        fields.forEach(([selector, key]) => {
+          const field = container.querySelector(selector);
+          if (field) field.value = cachedInput[key] || "";
+        });
+        const companyScale = container.querySelector("#fCompanyScale");
+        const careerStage = container.querySelector("#fCareerStage");
+        if (companyScale && cachedInput.companyScaleKey) companyScale.value = cachedInput.companyScaleKey;
+        if (careerStage && cachedInput.careerStageKey) careerStage.value = cachedInput.careerStageKey;
+        updateContextSize(container);
+        toast("已加载本地示例数据和分析结果，不调用 AI", "success");
+        return;
+      }
       fillExampleData(container);
     });
 
@@ -438,15 +476,17 @@ async function handleResumeFile(file, container) {
       text = await file.text();
     }
     container.querySelector("#fResumeText").value = text;
-    store.set({ input: { resumeText: text } });
+    store.set({ input: { resumeText: text, isExampleData: false } });
     toast(`解析完成（${text.length} 字）`, "success");
   } catch (e) {
     console.error(e);
+    updateProgress("error", e.analysisLabel || "当前步骤");
     toast(`解析失败：${e.message}`, "error");
   }
 }
 
 function fillExampleData(container) {
+  store.set({ input: { isExampleData: true } });
   const jd = `我们是一家 100-499 人的互联网医疗公司（C 轮融资），专注于用 AI + 移动端技术重塑慢病管理体验。
 
 【岗位职责】
@@ -530,6 +570,13 @@ async function handleStart(container) {
   }
 
   // 标记 step1 完成
+  if (input.isExampleData && restoreExampleAnalysisCache()) {
+    store.markStepDone(1);
+    toast("已加载本地示例分析结果，不调用 AI", "success");
+    router.go(2);
+    return;
+  }
+
   store.markStepDone(1);
 
   // 隐私脱敏演示（在生产中会在每次 AI 调用时透明进行）
@@ -544,11 +591,34 @@ async function handleStart(container) {
   const button = container.querySelector("#startAnalysis");
   const progress = container.querySelector("#fullAnalysisProgress");
   const title = progress?.querySelector(".card-title");
+  const percent = progress?.querySelector("#fullAnalysisProgressPercent");
+  const fill = progress?.querySelector("#fullAnalysisProgressFill");
+  const meter = progress?.querySelector(".full-analysis-meter");
+  const meta = progress?.querySelector("#fullAnalysisProgressMeta");
+  const totalSteps = FULL_ANALYSIS_STEPS.length;
+
+  function updateProgress(status, label) {
+    if (!progress) return;
+    const items = [...progress.querySelectorAll(".full-analysis-progress-item")];
+    const completed = items.filter((item) => ["done", "cached"].includes(item.dataset.status)).length;
+    const current = status === "running"
+      ? Math.min(99, Math.round(((completed + 0.35) / totalSteps) * 100))
+      : Math.round((completed / totalSteps) * 100);
+    if (percent) percent.textContent = `${current}%`;
+    if (fill) fill.style.width = `${current}%`;
+    if (meter) meter.setAttribute("aria-valuenow", String(current));
+    if (meta) meta.textContent = status === "running"
+      ? `${completed}/${totalSteps} 已完成 · 正在解析 ${label}`
+      : `${completed}/${totalSteps} 已完成`;
+  }
   if (button) {
     button.disabled = true;
     button.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;"></span><span>全量解析中…</span>';
   }
-  if (progress) progress.hidden = false;
+  if (progress) {
+    progress.hidden = false;
+    updateProgress("ready", "");
+  }
 
   try {
     await runFullAnalysis({
@@ -559,6 +629,7 @@ async function handleStart(container) {
         const statusText = status === "running" ? "解析中" : status === "cached" ? "已缓存" : status === "done" ? "已完成" : "失败";
         if (statusEl) statusEl.textContent = statusText;
         item.dataset.status = status;
+        updateProgress(status, label);
         if (title && status === "running") title.textContent = `正在解析：${label}`;
       },
     });
