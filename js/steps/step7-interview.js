@@ -7,8 +7,14 @@ import { chatJson } from "../ai/deepseek.js";
 import { PROMPTS, buildUserPayload } from "../ai/prompts.js";
 import { redact, mergeMaps, restoreTree } from "../privacy.js";
 import { exportFullReport } from "../export/report.js";
+import { createSilverLinkInterviewExample } from "../data/silverlink-interview-example.js";
 
 export async function renderStep7(container) {
+  const input = store.get("input") || {};
+  if (input.isExampleData) {
+    store.replace("interview", createSilverLinkInterviewExample());
+    store.markStepDone(7);
+  }
   const existing = store.get("interview");
   const settings = store.get("settings");
 
@@ -84,7 +90,7 @@ export async function renderStep7(container) {
       <div class="step-page-header">
         <div>
           <h1 class="step-page-title">面试准备</h1>
-          <p class="step-page-desc">基于简历与 JD，生成自我介绍、可能被追问题目、关键数据</p>
+          <p class="step-page-desc">基于简历与 JD，生成自我介绍、可能被追问题目、关键数据${data.sourceLabel ? ` · ${esc(data.sourceLabel)}` : ""}</p>
         </div>
         <div class="flex gap-2">
           <button class="ghost-btn" id="exportJd">导出简历初稿 PDF</button>
@@ -105,22 +111,14 @@ export async function renderStep7(container) {
         <p class="text-muted" style="font-size:12px;">行为面试 5-10 题 + 专业基础知识 5-10 题</p>
 
         <div class="interview-list">
-          ${(data.behaviorQuestions || []).map((q, i) => `
-            <div class="interview-item">
-              <div class="interview-q-num">${i + 1}</div>
-              <div class="interview-q-text">${esc(q)}</div>
-            </div>
-          `).join("")}
-          ${(data.techQuestions || []).map((q, i) => `
-            <div class="interview-item">
-              <div class="interview-q-num">${(data.behaviorQuestions?.length || 0) + 1 + i}</div>
-              <div class="interview-q-text">${esc(q)}</div>
-            </div>
-          `).join("")}
+          ${(data.behaviorQuestions || []).map((q, i) => renderQuestionItem(q, i + 1)).join("")}
+          ${(data.techQuestions || []).map((q, i) => renderQuestionItem(q, (data.behaviorQuestions?.length || 0) + 1 + i)).join("")}
           ${(!data.techQuestions || data.techQuestions.length === 0) ? `
             <div class="interview-item">
               <div class="interview-q-num">6</div>
-              <div class="interview-q-text">请详细介绍你最满意的一个 Android 项目，包括架构设计、个人贡献。</div>
+              <div class="interview-q-content">
+                <div class="interview-q-text">请详细介绍你最满意的一个 Android 项目，包括架构设计、个人贡献。</div>
+              </div>
             </div>
           ` : ""}
         </div>
@@ -153,6 +151,20 @@ export async function renderStep7(container) {
     container.querySelector("#exportJd").addEventListener("click", () => exportFullReport("jd"));
     container.querySelector("#exportReport").addEventListener("click", () => exportFullReport("full"));
   }
+}
+
+function renderQuestionItem(question, number) {
+  const text = typeof question === "string" ? question : question?.question || question?.prompt || "";
+  const answer = typeof question === "string" ? "" : question?.answer || "";
+  return `
+    <div class="interview-item">
+      <div class="interview-q-num">${number}</div>
+      <div class="interview-q-content">
+        <div class="interview-q-text">${esc(text)}</div>
+        ${answer ? `<div class="interview-answer"><strong>参考回答</strong><div>${esc(answer)}</div></div>` : ""}
+      </div>
+    </div>
+  `;
 }
 
 function esc(s) {

@@ -133,8 +133,31 @@ try {
   assert.equal(await pluginPage.locator("#fJdText").inputValue(), "来自浏览器插件的 JD");
   await pluginPage.close();
 
+  const exampleState = JSON.parse(JSON.stringify(state));
+  exampleState.tasks[taskId].input.isExampleData = true;
+  exampleState.tasks[taskId].doneSteps = [1, 2, 3, 4, 5, 6, 7];
+  exampleState.tasks[taskId].currentStep = 7;
+  const examplePage = await context.newPage();
+  const examplePageErrors = [];
+  const exampleApiRequests = [];
+  examplePage.on("pageerror", (error) => examplePageErrors.push(error.message));
+  examplePage.on("request", (request) => {
+    if (request.url().includes("api.deepseek.com")) exampleApiRequests.push(request.url());
+  });
+  await examplePage.addInitScript((initialState) => {
+    localStorage.setItem("jobmentor-ai-v1", JSON.stringify(initialState));
+  }, exampleState);
+  await examplePage.goto(`${BASE_URL}/#/step/7`, { waitUntil: "domcontentloaded" });
+  await examplePage.waitForSelector(".interview-answer");
+  assert.equal(await examplePage.locator(".interview-answer").count(), 10);
+  assert.match(await examplePage.locator(".step-page-desc").first().textContent(), /SilverLink 项目本地示例答案/);
+  assert.match(await examplePage.locator("body").textContent(), /AuthInterceptor/);
+  assert.deepEqual(exampleApiRequests, []);
+  assert.deepEqual(examplePageErrors, []);
+  await examplePage.close();
+
   assert.deepEqual(pageErrors, []);
-  console.log("浏览器回归通过：7 套模板、版本快照、任务新建、API Key 弹窗、插件 JD 注入、无 pageerror");
+  console.log("浏览器回归通过：7 套模板、版本快照、任务新建、API Key 弹窗、插件 JD 注入、本地 SilverLink 面试答案、无 pageerror");
 } finally {
   await browser.close();
 }

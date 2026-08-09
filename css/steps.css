@@ -804,6 +804,30 @@
   flex: 1;
 }
 
+.interview-q-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.interview-answer {
+  margin-top: var(--gap-2);
+  padding: var(--gap-3);
+  border-left: 3px solid var(--success);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.interview-answer strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--success);
+  font-size: 12px;
+}
+
 .skill-tags {
   display: flex;
   gap: var(--gap-2);
