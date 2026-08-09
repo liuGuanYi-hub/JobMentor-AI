@@ -336,6 +336,9 @@
 
 /* ===== 文件上传 ===== */
 .file-drop {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
   border: 2px dashed var(--border-strong);
   border-radius: var(--radius);
   padding: var(--gap-5);
