@@ -5,7 +5,7 @@ import { router } from "../router.js";
 import { toast } from "../ui/toast.js";
 import { chatJson } from "../ai/deepseek.js";
 import { PROMPTS, buildUserPayload } from "../ai/prompts.js";
-import { redact, restore } from "../privacy.js";
+import { redact, restoreTree } from "../privacy.js";
 import { exportFullReport } from "../export/report.js";
 
 export async function renderStep2(container) {
@@ -77,7 +77,7 @@ export async function renderStep2(container) {
 
       // 还原
       if (restoreMap) {
-        restoreInPlace(result, restoreMap);
+        Object.assign(result, restoreTree(result, restoreMap));
       }
 
       store.replace("jdAnalysis", result);
@@ -169,32 +169,6 @@ function renderResult(data) {
       <button class="primary-btn" id="nextBtn">下一步 · 简历诊断 ›</button>
     </div>
   `;
-}
-
-function restoreInPlace(obj, map) {
-  // 递归处理：将字符串值中的占位符还原为原文
-  if (obj == null) return;
-  if (typeof obj === "string") {
-    // 无法直接修改原始字符串，由调用方替换（见下方 restoreTree 用法）
-    return;
-  }
-  if (Array.isArray(obj)) {
-    obj.forEach((v, i) => {
-      if (typeof v === "string") {
-        obj[i] = restore(v, map);
-      } else {
-        restoreInPlace(v, map);
-      }
-    });
-  } else if (typeof obj === "object") {
-    Object.entries(obj).forEach(([k, v]) => {
-      if (typeof v === "string") {
-        obj[k] = restore(v, map);
-      } else {
-        restoreInPlace(v, map);
-      }
-    });
-  }
 }
 
 function esc(s) {

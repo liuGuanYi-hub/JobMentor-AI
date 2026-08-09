@@ -7,6 +7,7 @@ import { showModal, closeModal, confirm } from "./ui/modal.js";
 import { toast } from "./ui/toast.js";
 import { setScore } from "./ui/score-ring.js";
 import { initTaskbar, refreshTaskLabel } from "./ui/taskbar.js";
+import { checkApiKey } from "./ai/deepseek.js";
 import { renderStep1 } from "./steps/step1-input.js";
 import { renderStep2 } from "./steps/step2-jd-parse.js";
 import { renderStep3 } from "./steps/step3-diagnose.js";
@@ -101,7 +102,7 @@ async function onStepChange(stepNum) {
     container.innerHTML = `
       <div class="card">
         <div class="card-title">加载失败</div>
-        <p class="text-muted">${e.message}</p>
+        <p class="text-muted">${escapeHtml(e.message || "未知错误")}</p>
       </div>
     `;
   }
@@ -178,7 +179,7 @@ function openApiKeyModal() {
       <p class="text-muted" style="font-size:11px;margin-top:6px;">
         没有 Key？前往
         <a href="https://platform.deepseek.com/" target="_blank" style="color:var(--primary);">DeepSeek 开放平台</a>
-        注册并申请（注册即送额度）。模型选择 <code>deepseek-chat</code>。
+        注册并申请（注册即送额度）。模型选择 <code>deepseek-v4-flash</code>。
       </p>
     </div>
     <div class="form-group">
@@ -219,16 +220,10 @@ function openApiKeyModal() {
     if (!v) return toast("请先填写 API Key", "warning");
     toast("正在测试连通性…", "info");
     try {
-      const resp = await fetch("https://api.deepseek.com/v1/models", {
-        headers: { Authorization: `Bearer ${v}` },
-      });
-      if (resp.ok) toast("✓ 连通正常", "success");
-      else {
-        const t = await resp.text();
-        toast(`✗ 连通失败：${resp.status}`, "error");
-      }
+      await checkApiKey({ apiKey: v });
+      toast("✓ 连通正常", "success");
     } catch (e) {
-      toast(`✗ 网络错误：${e.message}`, "error");
+      toast(`✗ ${e.message || "网络错误"}`, "error");
     }
   };
 }
@@ -239,6 +234,15 @@ function updateApiKeyStatus() {
   const key = store.get("settings.apiKey");
   el.textContent = key ? "已设置" : "未设置";
   el.style.color = key ? "var(--success)" : "var(--text-3)";
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 // 启动

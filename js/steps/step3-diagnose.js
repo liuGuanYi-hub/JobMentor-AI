@@ -6,7 +6,7 @@ import { toast } from "../ui/toast.js";
 import { setScore } from "../ui/score-ring.js";
 import { chatJson } from "../ai/deepseek.js";
 import { PROMPTS, buildUserPayload } from "../ai/prompts.js";
-import { redact } from "../privacy.js";
+import { redact, mergeMaps, restoreTree } from "../privacy.js";
 import { exportFullReport } from "../export/report.js";
 
 export async function renderStep3(container) {
@@ -42,12 +42,14 @@ export async function renderStep3(container) {
     const jdAnalysis = store.get("jdAnalysis");
     let jdText = input.jdText;
     let resumeText = input.resumeText;
+    let restoreMap = null;
 
     if (settings.privacyOn) {
       const r1 = redact(jdText);
       jdText = r1.redacted;
       const r2 = redact(resumeText);
       resumeText = r2.redacted;
+      restoreMap = mergeMaps(r1.map, r2.map);
     }
 
     try {
@@ -55,7 +57,8 @@ export async function renderStep3(container) {
         { role: "system", content: PROMPTS.step3 },
         { role: "user", content: buildUserPayload("step3", { input, jdText, resumeText, jdAnalysis }) },
       ];
-      const result = await chatJson({ apiKey, messages, temperature: 0.4 });
+      let result = await chatJson({ apiKey, messages, temperature: 0.4 });
+      if (restoreMap) result = restoreTree(result, restoreMap);
       store.replace("diagnose", result);
       store.markStepDone(3);
       renderResult(result);
@@ -64,7 +67,7 @@ export async function renderStep3(container) {
       container.innerHTML = `
         <div class="card">
           <div class="card-title">诊断失败</div>
-          <p class="text-muted">${e.message}</p>
+          <p class="text-muted">${esc(e.message)}</p>
           <button class="primary-btn mt-4" id="retryBtn">重试</button>
         </div>
       `;

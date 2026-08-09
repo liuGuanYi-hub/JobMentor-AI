@@ -5,7 +5,7 @@ import { router } from "../router.js";
 import { toast } from "../ui/toast.js";
 import { chatJson } from "../ai/deepseek.js";
 import { PROMPTS, buildUserPayload } from "../ai/prompts.js";
-import { redact } from "../privacy.js";
+import { redact, mergeMaps, restoreTree } from "../privacy.js";
 import { exportFullReport } from "../export/report.js";
 
 export async function renderStep6(container) {
@@ -36,9 +36,13 @@ export async function renderStep6(container) {
     const deepdive = store.get("deepdive");
     let jdText = input.jdText;
     let resumeText = input.resumeText;
+    let restoreMap = null;
     if (settings.privacyOn) {
-      jdText = redact(jdText).redacted;
-      resumeText = redact(resumeText).redacted;
+      const r1 = redact(jdText);
+      const r2 = redact(resumeText);
+      jdText = r1.redacted;
+      resumeText = r2.redacted;
+      restoreMap = mergeMaps(r1.map, r2.map);
     }
 
     const extra = deepdive ? deepdive.questions.filter(q => q.refinedBullet).map(q => `${q.prompt}\n回答: ${q.userAnswer}\n改写为: ${q.refinedBullet}`).join("\n\n") : "";
@@ -48,7 +52,8 @@ export async function renderStep6(container) {
         { role: "system", content: PROMPTS.step6 },
         { role: "user", content: buildUserPayload("step6", { input, jdText, resumeText, jdAnalysis, deepdive, extra }) },
       ];
-      const result = await chatJson({ apiKey, messages, temperature: 0.5, maxRetries: 1 });
+      let result = await chatJson({ apiKey, messages, temperature: 0.5, maxRetries: 1 });
+      if (restoreMap) result = restoreTree(result, restoreMap);
       // 默认选 authentic 列为最终版
       result.sections = (result.sections || []).map(s => ({
         ...s,
@@ -62,7 +67,7 @@ export async function renderStep6(container) {
       container.innerHTML = `
         <div class="card">
           <div class="card-title">优化失败</div>
-          <p class="text-muted">${e.message}</p>
+          <p class="text-muted">${esc(e.message)}</p>
           <button class="primary-btn mt-4" id="retryBtn">重试</button>
         </div>
       `;

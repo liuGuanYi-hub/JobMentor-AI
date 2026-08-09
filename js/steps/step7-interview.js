@@ -5,7 +5,7 @@ import { router } from "../router.js";
 import { toast } from "../ui/toast.js";
 import { chatJson } from "../ai/deepseek.js";
 import { PROMPTS, buildUserPayload } from "../ai/prompts.js";
-import { redact } from "../privacy.js";
+import { redact, mergeMaps, restoreTree } from "../privacy.js";
 import { exportFullReport } from "../export/report.js";
 
 export async function renderStep7(container) {
@@ -37,9 +37,13 @@ export async function renderStep7(container) {
     const optimize = store.get("optimize");
     let jdText = input.jdText;
     let resumeText = input.resumeText;
+    let restoreMap = null;
     if (settings.privacyOn) {
-      jdText = redact(jdText).redacted;
-      resumeText = redact(resumeText).redacted;
+      const r1 = redact(jdText);
+      const r2 = redact(resumeText);
+      jdText = r1.redacted;
+      resumeText = r2.redacted;
+      restoreMap = mergeMaps(r1.map, r2.map);
     }
 
     const extra = optimize ? "用户已选定的 Bullet 优化方向已纳入考量" : "";
@@ -49,7 +53,8 @@ export async function renderStep7(container) {
         { role: "system", content: PROMPTS.step7 },
         { role: "user", content: buildUserPayload("step7", { input, jdText, resumeText, jdAnalysis, diagnose, optimize, extra }) },
       ];
-      const result = await chatJson({ apiKey, messages, temperature: 0.5 });
+      let result = await chatJson({ apiKey, messages, temperature: 0.5 });
+      if (restoreMap) result = restoreTree(result, restoreMap);
       store.replace("interview", result);
       store.markStepDone(7);
       render(result);
@@ -58,7 +63,7 @@ export async function renderStep7(container) {
       container.innerHTML = `
         <div class="card">
           <div class="card-title">生成失败</div>
-          <p class="text-muted">${e.message}</p>
+          <p class="text-muted">${esc(e.message)}</p>
           <button class="primary-btn mt-4" id="retryBtn">重试</button>
         </div>
       `;

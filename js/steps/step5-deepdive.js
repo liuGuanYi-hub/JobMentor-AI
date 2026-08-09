@@ -5,7 +5,7 @@ import { router } from "../router.js";
 import { toast } from "../ui/toast.js";
 import { chatJson } from "../ai/deepseek.js";
 import { PROMPTS, buildUserPayload } from "../ai/prompts.js";
-import { redact } from "../privacy.js";
+import { redact, mergeMaps, restoreTree } from "../privacy.js";
 
 export async function renderStep5(container) {
   const existing = store.get("deepdive");
@@ -35,9 +35,13 @@ export async function renderStep5(container) {
     const matchAnalysis = store.get("matchAnalysis");
     let jdText = input.jdText;
     let resumeText = input.resumeText;
+    let restoreMap = null;
     if (settings.privacyOn) {
-      jdText = redact(jdText).redacted;
-      resumeText = redact(resumeText).redacted;
+      const r1 = redact(jdText);
+      const r2 = redact(resumeText);
+      jdText = r1.redacted;
+      resumeText = r2.redacted;
+      restoreMap = mergeMaps(r1.map, r2.map);
     }
 
     try {
@@ -45,7 +49,8 @@ export async function renderStep5(container) {
         { role: "system", content: PROMPTS.step5 },
         { role: "user", content: buildUserPayload("step5", { input, jdText, resumeText, jdAnalysis, matchAnalysis }) },
       ];
-      const result = await chatJson({ apiKey, messages, temperature: 0.5 });
+      let result = await chatJson({ apiKey, messages, temperature: 0.5 });
+      if (restoreMap) result = restoreTree(result, restoreMap);
       // 初始化用户回答字段
       result.questions = (result.questions || []).map((q, i) => ({
         ...q,
@@ -61,7 +66,7 @@ export async function renderStep5(container) {
       container.innerHTML = `
         <div class="card">
           <div class="card-title">追问生成失败</div>
-          <p class="text-muted">${e.message}</p>
+          <p class="text-muted">${esc(e.message)}</p>
           <button class="primary-btn mt-4" id="retryBtn">重试</button>
         </div>
       `;
@@ -176,6 +181,7 @@ export async function renderStep5(container) {
       return;
     }
     const input = store.get("input");
+    const settings = store.get("settings");
     const jdAnalysis = store.get("jdAnalysis");
     let jdContext = "";
     if (jdAnalysis) {
@@ -187,14 +193,26 @@ export async function renderStep5(container) {
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;"></span> <span>改写中…</span>';
 
+      let prompt = q.prompt;
+      let answer = q.userAnswer;
+      let restoreMap = null;
+      if (settings.privacyOn) {
+        const qRedacted = redact(prompt);
+        const aRedacted = redact(answer);
+        prompt = qRedacted.redacted;
+        answer = aRedacted.redacted;
+        restoreMap = mergeMaps(qRedacted.map, aRedacted.map);
+      }
+
       const messages = [
         { role: "system", content: PROMPTS.step5Refine },
         {
           role: "user",
-          content: `【JD 关注点】\n${jdContext}\n\n【用户的追问】\n${q.prompt}\n\n【用户的回答】\n${q.userAnswer}\n\n请把上述回答改写成 1 条简历 Bullet，要求：具体、量化、有行动力、自然、20-50 字。`,
+          content: `【JD 关注点】\n${jdContext}\n\n【用户的追问】\n${prompt}\n\n【用户的回答】\n${answer}\n\n请把上述回答改写成 1 条简历 Bullet，要求：具体、量化、有行动力、自然、20-50 字。`,
         },
       ];
-      const result = await chatJson({ apiKey, messages, temperature: 0.5 });
+      let result = await chatJson({ apiKey, messages, temperature: 0.5 });
+      if (restoreMap) result = restoreTree(result, restoreMap);
       q.refinedBullet = result.bullet || JSON.stringify(result);
       store.replace("deepdive", data);
       render(data);

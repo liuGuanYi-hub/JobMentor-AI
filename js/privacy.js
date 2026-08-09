@@ -63,6 +63,32 @@ export function restore(text, map) {
   return result;
 }
 
+/**
+ * 递归还原 AI 结构化结果中的敏感信息，占位符不会遗留在结果里。
+ */
+export function restoreTree(value, map) {
+  if (typeof value === "string") return restore(value, map);
+  if (Array.isArray(value)) return value.map((item) => restoreTree(item, map));
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, restoreTree(item, map)]));
+  }
+  return value;
+}
+
+/**
+ * 合并多段文本脱敏产生的映射，供一次 AI 调用统一还原结果。
+ */
+export function mergeMaps(...maps) {
+  const merged = { phone: new Map(), email: new Map(), idCard: new Map() };
+  for (const map of maps) {
+    if (!map) continue;
+    for (const type of Object.keys(merged)) {
+      for (const [key, value] of map[type]?.entries?.() || []) merged[type].set(key, value);
+    }
+  }
+  return merged;
+}
+
 // 自我检测：返回一段文本里所有识别出的敏感项
 export function detect(text) {
   const found = { phone: [], email: [], idCard: [] };

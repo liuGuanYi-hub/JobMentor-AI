@@ -5,7 +5,7 @@ import { router } from "../router.js";
 import { toast } from "../ui/toast.js";
 import { chatJson } from "../ai/deepseek.js";
 import { PROMPTS, buildUserPayload } from "../ai/prompts.js";
-import { redact } from "../privacy.js";
+import { redact, mergeMaps, restoreTree } from "../privacy.js";
 import { exportFullReport } from "../export/report.js";
 
 const STRENGTH_MAP = {
@@ -44,9 +44,13 @@ export async function renderStep4(container) {
     const jdAnalysis = store.get("jdAnalysis");
     let jdText = input.jdText;
     let resumeText = input.resumeText;
+    let restoreMap = null;
     if (settings.privacyOn) {
-      jdText = redact(jdText).redacted;
-      resumeText = redact(resumeText).redacted;
+      const r1 = redact(jdText);
+      const r2 = redact(resumeText);
+      jdText = r1.redacted;
+      resumeText = r2.redacted;
+      restoreMap = mergeMaps(r1.map, r2.map);
     }
 
     try {
@@ -54,7 +58,8 @@ export async function renderStep4(container) {
         { role: "system", content: PROMPTS.step4 },
         { role: "user", content: buildUserPayload("step4", { input, jdText, resumeText, jdAnalysis }) },
       ];
-      const result = await chatJson({ apiKey, messages, temperature: 0.4 });
+      let result = await chatJson({ apiKey, messages, temperature: 0.4 });
+      if (restoreMap) result = restoreTree(result, restoreMap);
       store.replace("matchAnalysis", result);
       store.markStepDone(4);
       renderResult(result);
