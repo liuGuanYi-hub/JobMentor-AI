@@ -3,6 +3,7 @@
 const API_BASE = "https://api.deepseek.com/v1";
 const DEFAULT_MODEL = "deepseek-v4-flash";
 const DEFAULT_TIMEOUT_MS = 60_000;
+export const DEFAULT_MAX_TOKENS = 4_096;
 const API_KEY_CHECK_TIMEOUT_MS = 15_000;
 export const INPUT_WARN_TOKENS = 12_000;
 export const INPUT_MAX_TOKENS = 16_000;
@@ -25,6 +26,8 @@ export async function chatCompletions({
   jsonMode = false,
   temperature = 0.4,
   maxRetries = 1,
+  maxTokens = DEFAULT_MAX_TOKENS,
+  thinking,
   signal,
   timeoutMs = DEFAULT_TIMEOUT_MS,
 } = {}) {
@@ -36,6 +39,8 @@ export async function chatCompletions({
     temperature,
     stream: false,
   };
+  if (Number.isFinite(maxTokens) && maxTokens > 0) body.max_tokens = maxTokens;
+  if (thinking) body.thinking = thinking;
   if (jsonMode) body.response_format = { type: "json_object" };
 
   let lastErr = null;
@@ -86,6 +91,8 @@ export async function chatJson({
   model,
   messages,
   temperature,
+  maxTokens = DEFAULT_MAX_TOKENS,
+  thinking,
   signal,
   validate,
   maxRetries = 1,
@@ -99,6 +106,8 @@ export async function chatJson({
     jsonMode: true,
     temperature,
     maxRetries,
+    maxTokens,
+    thinking,
     signal,
     timeoutMs,
   });
@@ -117,6 +126,8 @@ export async function chatJson({
       jsonMode: true,
       temperature: 0.2,
       maxRetries,
+      maxTokens,
+      thinking,
       signal,
       timeoutMs,
     });

@@ -57,6 +57,7 @@ test("DeepSeek JSON 非法输出会自动重试并解析", async () => {
     const result = await chatJson({ apiKey: "TEST_TOKEN", messages: [], maxRetries: 0, timeoutMs: 200 });
     assert.deepEqual(result, { ok: true });
     assert.equal(calls.length, 2);
+    assert.equal(calls[0].max_tokens, 4096);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -152,15 +153,21 @@ test("全量分析按依赖顺序请求一次并复用已缓存结果", async ()
   ];
   const originalFetch = globalThis.fetch;
   let calls = 0;
-  globalThis.fetch = async () => ({
-    ok: true,
-    status: 200,
-    json: async () => ({ choices: [{ message: { content: JSON.stringify(responses[calls++]) } }] }),
-    text: async () => "",
-  });
+  const requests = [];
+  globalThis.fetch = async (_url, options) => {
+    requests.push(JSON.parse(options.body));
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ choices: [{ message: { content: JSON.stringify(responses[calls++]) } }] }),
+      text: async () => "",
+    };
+  };
   try {
     await runFullAnalysis();
     assert.equal(calls, 6);
+    assert.equal(requests[4].max_tokens, 6000);
+    assert.deepEqual(requests[4].thinking, { type: "disabled" });
     await runFullAnalysis();
     assert.equal(calls, 6);
     assert.deepEqual(store.get("doneSteps"), [2, 3, 4, 5, 6, 7]);

@@ -52,7 +52,14 @@ export async function renderStep6(container) {
         { role: "system", content: PROMPTS.step6 },
         { role: "user", content: buildUserPayload("step6", { input, jdText, resumeText, jdAnalysis, deepdive, extra }) },
       ];
-      let result = await chatJson({ apiKey, messages, temperature: 0.5, maxRetries: 1 });
+      let result = await chatJson({
+        apiKey,
+        messages,
+        temperature: 0.5,
+        maxRetries: 1,
+        maxTokens: 6000,
+        thinking: { type: "disabled" },
+      });
       if (restoreMap) result = restoreTree(result, restoreMap);
       // 默认选 authentic 列为最终版
       result.sections = (result.sections || []).map(s => ({

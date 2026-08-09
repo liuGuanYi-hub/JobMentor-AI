@@ -10,7 +10,7 @@ export const FULL_ANALYSIS_STEPS = [
   { step: 3, key: "diagnose", label: "简历诊断", promptKey: "step3", temperature: 0.4 },
   { step: 4, key: "matchAnalysis", label: "匹配分析", promptKey: "step4", temperature: 0.4 },
   { step: 5, key: "deepdive", label: "经历追问", promptKey: "step5", temperature: 0.5 },
-  { step: 6, key: "optimize", label: "简历优化", promptKey: "step6", temperature: 0.5, maxRetries: 1 },
+  { step: 6, key: "optimize", label: "简历优化", promptKey: "step6", temperature: 0.5, maxRetries: 1, maxTokens: 6000, thinking: { type: "disabled" } },
   { step: 7, key: "interview", label: "面试准备", promptKey: "step7", temperature: 0.5 },
 ];
 
@@ -72,6 +72,8 @@ async function runOneStep(definition, { apiKey, input, settings }) {
     messages,
     temperature: definition.temperature,
     maxRetries: definition.maxRetries ?? 1,
+    maxTokens: definition.maxTokens,
+    thinking: definition.thinking,
   });
 
   if (context.restoreMap) result = restoreTree(result, context.restoreMap);
