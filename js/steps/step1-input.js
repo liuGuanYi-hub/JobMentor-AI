@@ -4,9 +4,11 @@ import { store } from "../store.js";
 import { router } from "../router.js";
 import { toast } from "../ui/toast.js";
 import { showModal, confirm } from "../ui/modal.js";
-import { redact, detect } from "../privacy.js";
+import { detect } from "../privacy.js";
 import { parsePdf } from "../parsers/pdf.js";
 import { parseDocx } from "../parsers/docx.js";
+import { estimateInputTokens, INPUT_WARN_TOKENS, INPUT_MAX_TOKENS } from "../ai/deepseek.js";
+import { runFullAnalysis, FULL_ANALYSIS_STEPS } from "../ai/full-analysis.js";
 
 const INDUSTRY_TAGS = [
   "互联网/软件工程", "人工智能/AIGC", "互联网/SaaS", "芯片/半导体",
@@ -68,7 +70,7 @@ export async function renderStep1(container) {
       </span>
       <span class="privacy-text">
         <strong>AI 敏感隐私数据保护</strong>
-        开启后，手机号、电子邮箱、姓名等个人隐私将在发送给 AI 前自动加密脱敏，分析完成后自动解密还原。
+        开启后，手机号、电子邮箱、身份证号等个人隐私将在发送给 AI 前自动加密脱敏，分析完成后自动解密还原。
         <span id="privacyDetect" style="display:none;margin-left:4px;color:var(--success);font-weight:500;"></span>
       </span>
       <label class="switch">
@@ -177,6 +179,14 @@ export async function renderStep1(container) {
       <div class="card-title">补充信息<span class="label-tip" style="margin-left:4px;color:var(--text-4);font-weight:400;">（可选）</span></div>
       <div class="card-desc">项目培训、转正情况、特长说明等</div>
       <textarea class="textarea" id="fSupplement" placeholder="如：希望突出在 移动端开发 功能模块、架构设计或数据驱动优化方面的丰富经验与项目成果…" style="min-height:80px;">${esc(input.supplement)}</textarea>
+      <div id="contextSizeNotice" class="text-muted" style="font-size:12px;margin-top:8px;"></div>
+    </div>
+
+    <div class="full-analysis-progress card" id="fullAnalysisProgress" hidden>
+      <div class="card-title">正在准备全量分析</div>
+      <div class="full-analysis-progress-list">
+        ${FULL_ANALYSIS_STEPS.map(({ step, label }) => `<div class="full-analysis-progress-item" data-analysis-step="${step}"><span class="progress-status">待处理</span><span>${label}</span></div>`).join("")}
+      </div>
     </div>
 
     <!-- 底部行动栏 -->
@@ -189,7 +199,7 @@ export async function renderStep1(container) {
         <button class="ghost-btn" id="fillExampleBtn">使用示例数据</button>
         <button class="primary-btn" id="startAnalysis">
           <i data-lucide="zap" width="14"></i>
-          <span>开始 AI 匹配分析</span>
+          <span>一键全量解析</span>
         </button>
       </div>
     </div>
@@ -199,6 +209,7 @@ export async function renderStep1(container) {
   if (window.lucide) window.lucide.createIcons();
 
   bindEvents(container);
+  updateContextSize(container);
 
   function pillBar(str) {
     if (!str) return "";
@@ -230,6 +241,7 @@ export async function renderStep1(container) {
           const value = el.value;
           store.set({ input: { [key]: value } });
           updatePrivacyWarn(container, value);
+          updateContextSize(container);
         });
       }
     });
@@ -345,6 +357,30 @@ export async function renderStep1(container) {
       el.style.display = "inline";
     } else {
       el.style.display = "none";
+    }
+  }
+
+  function updateContextSize(container) {
+    const jd = container.querySelector("#fJdText")?.value || "";
+    const resume = container.querySelector("#fResumeText")?.value || "";
+    const supplement = container.querySelector("#fSupplement")?.value || "";
+    const tokens = estimateInputTokens({ jdText: jd, resumeText: resume, supplement });
+    const notice = container.querySelector("#contextSizeNotice");
+    const start = container.querySelector("#startAnalysis");
+    if (!notice || !start) return;
+
+    if (tokens > INPUT_MAX_TOKENS) {
+      notice.textContent = `材料量约 ${tokens.toLocaleString()} tokens，超过单次分析上限 ${INPUT_MAX_TOKENS.toLocaleString()}。请先精简 JD、简历或补充信息。`;
+      notice.style.color = "var(--danger)";
+      start.disabled = true;
+    } else if (tokens > INPUT_WARN_TOKENS) {
+      notice.textContent = `材料量约 ${tokens.toLocaleString()} tokens，已接近单次分析上限 ${INPUT_MAX_TOKENS.toLocaleString()}，建议先精简。`;
+      notice.style.color = "var(--warning)";
+      start.disabled = false;
+    } else {
+      notice.textContent = `材料量约 ${tokens.toLocaleString()} tokens，低于单次分析上限。`;
+      notice.style.color = "var(--text-3)";
+      start.disabled = false;
     }
   }
 }
@@ -487,6 +523,11 @@ async function handleStart(container) {
     toast("请粘贴或上传原始简历", "warning");
     return;
   }
+  const estimatedTokens = estimateInputTokens(input);
+  if (estimatedTokens > INPUT_MAX_TOKENS) {
+    toast(`材料量约 ${estimatedTokens.toLocaleString()} tokens，超过上限，请先精简材料`, "warning");
+    return;
+  }
 
   // 标记 step1 完成
   store.markStepDone(1);
@@ -500,5 +541,38 @@ async function handleStart(container) {
     }
   }
 
-  router.go(2);
+  const button = container.querySelector("#startAnalysis");
+  const progress = container.querySelector("#fullAnalysisProgress");
+  const title = progress?.querySelector(".card-title");
+  if (button) {
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;"></span><span>全量解析中…</span>';
+  }
+  if (progress) progress.hidden = false;
+
+  try {
+    await runFullAnalysis({
+      onProgress: ({ step, label, status }) => {
+        const item = progress?.querySelector(`[data-analysis-step="${step}"]`);
+        if (!item) return;
+        const statusEl = item.querySelector(".progress-status");
+        const statusText = status === "running" ? "解析中" : status === "cached" ? "已缓存" : status === "done" ? "已完成" : "失败";
+        if (statusEl) statusEl.textContent = statusText;
+        item.dataset.status = status;
+        if (title && status === "running") title.textContent = `正在解析：${label}`;
+      },
+    });
+    if (title) title.textContent = "全量解析完成，可快速查看各步骤结果";
+    toast("全量解析完成，可直接快速查看各步骤结果", "success");
+    router.go(2);
+  } catch (e) {
+    console.error(e);
+    if (title) title.textContent = `${e.analysisLabel || "全量分析"}失败，可点击重试`;
+    if (button) {
+      button.disabled = false;
+      button.innerHTML = '<i data-lucide="refresh-cw" width="14"></i><span>重试全量解析</span>';
+      if (window.lucide) window.lucide.createIcons();
+    }
+    toast(`全量解析失败：${e.message || "未知错误"}`, "error");
+  }
 }

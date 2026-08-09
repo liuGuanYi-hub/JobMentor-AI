@@ -154,6 +154,56 @@
   gap: var(--gap-2);
 }
 
+.full-analysis-progress {
+  margin-top: var(--gap-4);
+  border-color: var(--primary);
+}
+
+.full-analysis-progress-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--gap-2);
+  margin-top: var(--gap-3);
+}
+
+.full-analysis-progress-item {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.full-analysis-progress-item[data-status="running"] {
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+.full-analysis-progress-item[data-status="done"],
+.full-analysis-progress-item[data-status="cached"] {
+  color: var(--success);
+}
+
+.full-analysis-progress-item[data-status="error"] {
+  color: var(--danger);
+  background: var(--danger-light);
+}
+
+.progress-status {
+  min-width: 42px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+@media (max-width: 760px) {
+  .full-analysis-progress-list {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ===== Step 2 JD 解析 ===== */
 .target-card {
   display: flex;
