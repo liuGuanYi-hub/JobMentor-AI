@@ -10,6 +10,7 @@ import { parseDocx } from "../parsers/docx.js";
 import { estimateInputTokens, INPUT_WARN_TOKENS, INPUT_MAX_TOKENS } from "../ai/deepseek.js";
 import {
   runFullAnalysis,
+  runLocalExampleAnalysis,
   FULL_ANALYSIS_STEPS,
   loadExampleAnalysisCache,
   saveExampleAnalysisCache,
@@ -569,25 +570,6 @@ async function handleStart(container) {
     return;
   }
 
-  // 标记 step1 完成
-  if (input.isExampleData && restoreExampleAnalysisCache()) {
-    store.markStepDone(1);
-    toast("已加载本地示例分析结果，不调用 AI", "success");
-    router.go(2);
-    return;
-  }
-
-  store.markStepDone(1);
-
-  // 隐私脱敏演示（在生产中会在每次 AI 调用时透明进行）
-  if (settings.privacyOn) {
-    const r = detect(input.jdText + "\n" + input.resumeText);
-    const total = r.phone.length + r.email.length + r.idCard.length;
-    if (total > 0) {
-      toast(`已脱敏 ${total} 项敏感信息`, "success");
-    }
-  }
-
   const button = container.querySelector("#startAnalysis");
   const progress = container.querySelector("#fullAnalysisProgress");
   const title = progress?.querySelector(".card-title");
@@ -611,27 +593,72 @@ async function handleStart(container) {
       ? `${completed}/${totalSteps} 已完成 · 正在解析 ${label}`
       : `${completed}/${totalSteps} 已完成`;
   }
-  if (button) {
-    button.disabled = true;
-    button.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;"></span><span>全量解析中…</span>';
+
+  function onProgress({ step, label, status }) {
+    const item = progress?.querySelector(`[data-analysis-step="${step}"]`);
+    if (!item) return;
+    const statusEl = item.querySelector(".progress-status");
+    const statusText = status === "running" ? "解析中" : status === "cached" ? "已缓存" : status === "done" ? "已完成" : "失败";
+    if (statusEl) statusEl.textContent = statusText;
+    item.dataset.status = status;
+    updateProgress(status, label);
+    if (title && status === "running") title.textContent = `正在解析：${label}`;
   }
-  if (progress) {
-    progress.hidden = false;
-    updateProgress("ready", "");
+
+  function prepareProgress() {
+    if (button) {
+      button.disabled = true;
+      button.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;"></span><span>全量解析中…</span>';
+    }
+    if (progress) {
+      progress.hidden = false;
+      progress.querySelectorAll(".full-analysis-progress-item").forEach((item) => {
+        item.dataset.status = "pending";
+        const statusEl = item.querySelector(".progress-status");
+        if (statusEl) statusEl.textContent = "待处理";
+      });
+      updateProgress("ready", "");
+    }
   }
+
+  // 示例数据只走本地演示流水线，不检查或调用 API Key。
+  if (input.isExampleData) {
+    prepareProgress();
+    try {
+      await runLocalExampleAnalysis({ onProgress });
+      if (title) title.textContent = "示例全量解析完成，可直接查看所有结果";
+      if (button) {
+        button.disabled = false;
+        button.innerHTML = '<i data-lucide="check-circle" width="14"></i><span>示例解析完成</span>';
+        if (window.lucide) window.lucide.createIcons();
+      }
+      toast("示例全量解析完成，已加载本地结果，不调用 AI", "success");
+      router.go(2);
+    } catch (error) {
+      console.error(error);
+      if (button) button.disabled = false;
+      toast(`示例解析失败：${error.message || "未知错误"}`, "error");
+    }
+    return;
+  }
+
+  // 标记 step1 完成
+  store.markStepDone(1);
+
+  // 隐私脱敏演示（在生产中会在每次 AI 调用时透明进行）
+  if (settings.privacyOn) {
+    const r = detect(input.jdText + "\n" + input.resumeText);
+    const total = r.phone.length + r.email.length + r.idCard.length;
+    if (total > 0) {
+      toast(`已脱敏 ${total} 项敏感信息`, "success");
+    }
+  }
+
+  prepareProgress();
 
   try {
     await runFullAnalysis({
-      onProgress: ({ step, label, status }) => {
-        const item = progress?.querySelector(`[data-analysis-step="${step}"]`);
-        if (!item) return;
-        const statusEl = item.querySelector(".progress-status");
-        const statusText = status === "running" ? "解析中" : status === "cached" ? "已缓存" : status === "done" ? "已完成" : "失败";
-        if (statusEl) statusEl.textContent = statusText;
-        item.dataset.status = status;
-        updateProgress(status, label);
-        if (title && status === "running") title.textContent = `正在解析：${label}`;
-      },
+      onProgress,
     });
     if (title) title.textContent = "全量解析完成，可快速查看各步骤结果";
     toast("全量解析完成，可直接快速查看各步骤结果", "success");

@@ -133,6 +133,41 @@ try {
   assert.equal(await pluginPage.locator("#fJdText").inputValue(), "来自浏览器插件的 JD");
   await pluginPage.close();
 
+  const localFlowState = JSON.parse(JSON.stringify(state));
+  localFlowState.tasks[taskId].input.isExampleData = true;
+  localFlowState.tasks[taskId].input.target = "安卓开发";
+  localFlowState.tasks[taskId].input.jdText = "负责 Android 客户端开发、Compose UI 和性能优化";
+  localFlowState.tasks[taskId].input.resumeText = "使用 Kotlin、Jetpack Compose、Room 和 Retrofit 完成 SilverLink 项目";
+  localFlowState.tasks[taskId].doneSteps = [];
+  localFlowState.tasks[taskId].currentStep = 1;
+  const localFlowPage = await context.newPage();
+  const localFlowRequests = [];
+  localFlowPage.on("request", (request) => {
+    if (request.url().includes("api.deepseek.com")) localFlowRequests.push(request.url());
+  });
+  await localFlowPage.addInitScript((initialState) => {
+    localStorage.setItem("jobmentor-ai-v1", JSON.stringify(initialState));
+  }, localFlowState);
+  await localFlowPage.goto(`${BASE_URL}/#/step/1`, { waitUntil: "domcontentloaded" });
+  await localFlowPage.waitForSelector("#startAnalysis");
+  await localFlowPage.evaluate(() => {
+    window.__exampleProgressValues = [];
+    const record = () => {
+      const value = document.querySelector("#fullAnalysisProgressPercent")?.textContent;
+      if (value) window.__exampleProgressValues.push(value);
+    };
+    record();
+    new MutationObserver(record).observe(document.body, { subtree: true, childList: true, attributes: true, characterData: true });
+  });
+  await localFlowPage.locator("#startAnalysis").click();
+  await localFlowPage.waitForSelector(".parse-card");
+  const localProgressValues = await localFlowPage.evaluate(() => window.__exampleProgressValues);
+  assert.ok(localProgressValues.includes("0%"));
+  assert.ok(localProgressValues.includes("100%"));
+  assert.equal(localFlowRequests.length, 0);
+  assert.equal(await localFlowPage.locator(".parse-card").count(), 4);
+  await localFlowPage.close();
+
   const exampleState = JSON.parse(JSON.stringify(state));
   exampleState.tasks[taskId].input.isExampleData = true;
   exampleState.tasks[taskId].doneSteps = [1, 2, 3, 4, 5, 6, 7];
