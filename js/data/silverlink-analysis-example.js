@@ -83,18 +83,31 @@ export function createSilverLinkFullAnalysisExample() {
             { label: "数据分层", original: "负责 Repository 分层", data: "建立可替换的数据访问链路，支持远程与本地数据切换", lead: "设计 Repository 分层并推动 Room / Retrofit 数据链路接入", authentic: "通过 Repository 统一远程接口与本地数据访问，降低 UI 对数据源的耦合", jdAligned: "对应架构设计、接口联调和工程效率提升" },
             { label: "离线回退", original: "支持离线模拟数据库降级", data: "网络不可用时保留核心页面和演示数据可用", lead: "主导远程优先、本地回退策略，减少网络异常对展示流程的影响", authentic: "为健康数据和服务流程保留本地回退，并区分数据来源状态", jdAligned: "对应稳定性、问题修复和用户体验保障" },
             { label: "查询优化", original: "优化健康监测数据和订单流水查询", data: "围绕时序数据和订单流水减少重复查询与等待", lead: "定位数据查询瓶颈并调整访问路径与缓存策略", authentic: "优化健康监测时序数据和服务订单流水查询，提升页面加载稳定性", jdAligned: "对应性能优化和工程效率提升" },
+            { label: "联调工具", original: "协助前端联调和调试", data: "协助接口联调并完善调试与性能监控工具", lead: "推动接口联调、调试和性能监控工具落地", authentic: "协助前端联调，开发调试与性能监控工具，缩短问题定位路径", jdAligned: "对应接口联调、问题修复和工程效率提升" },
+          ],
+        },
+        {
+          type: "projectExperience",
+          title: "Project Experience · 辅助智能小组原型 Agent",
+          period: "2026.02",
+          items: [
+            { label: "多 Agent 编排", original: "集成多个 Agent", data: "基于 LangChain + WebClient 集成多 Agent", lead: "设计可热更新的多 Agent 调度策略", authentic: "基于 LangChain + WebClient 集成多 Agent，调度策略可热更新", jdAligned: "对应 AI 应用开发、接口设计和工程协作" },
+            { label: "评估体系", original: "完成效果评估", data: "建立数据驱动的召回与精确率评估", lead: "构建数据驱动评估体系并定位效果瓶颈", authentic: "构建数据驱动评估体系，识别召回/精确率提升 12pt", jdAligned: "对应问题分析、数据验证和持续优化" },
           ],
         },
         {
           type: "workExperience",
           title: "Work Experience · 后端工程师实习",
           period: "2026.04 - 2026.07",
-          items: [{ label: "数据处理", original: "参与后端数据聚合服务", data: "参与数据聚合与 ETL 流程重构，吞吐提升 30%", lead: "用 Go 重构 ETL 流程并协助完成服务联调", authentic: "参与后端数据聚合服务开发维护，用 Go 重构 ETL 流程并提升数据吞吐 30%", jdAligned: "证明接口、数据处理、问题分析和工程协作能力" }],
+          items: [
+            { label: "数据处理", original: "参与后端数据聚合服务", data: "参与数据聚合与 ETL 流程重构，吞吐提升 30%", lead: "用 Go 重构 ETL 流程并协助完成服务联调", authentic: "参与后端数据聚合服务开发维护，用 Go 重构 ETL 流程并提升数据吞吐 30%", jdAligned: "证明接口、数据处理、问题分析和工程协作能力" },
+            { label: "服务维护", original: "维护数据服务", data: "参与数据聚合服务的开发、维护和问题修复", lead: "协助完成数据服务接口联调与问题修复", authentic: "参与数据聚合服务的开发与维护，涉及 Spark SQL / Flink", jdAligned: "对应后台服务开发、接口联调和问题修复" },
+          ],
         },
         {
           type: "skillsAndTools",
           title: "Skills and Tools · 技能与工具",
-          items: [{ label: "技术栈", original: "Android、后端、工具", data: "Kotlin / Compose / MVVM / Room / Retrofit / Java / Spring Boot / Go", lead: "能够在移动端与后端之间完成接口和数据链路协作", authentic: "Android：Kotlin、Jetpack Compose、MVVM、Repository、Room；后端：Java、Spring Boot、Go、MySQL、Redis；工具：Git、Linux、Docker", jdAligned: "覆盖岗位要求的编程语言、移动端经验、数据库和 Git 工程实践" }],
+          items: [{ label: "技术栈", original: "Android、后端、工具", data: "Kotlin / Compose / MVVM / Room / Retrofit / Java / Spring Boot / Go / MySQL / Redis", lead: "能够在移动端与后端之间完成接口和数据链路协作", authentic: "Android：Kotlin、Jetpack Compose、MVVM、Repository、Room、Retrofit；后端：Java、Spring Boot、Go、MySQL、Redis；工具：Git、Linux、Docker", jdAligned: "覆盖岗位要求的编程语言、移动端经验、数据库和 Git 工程实践" }],
         },
       ],
     },

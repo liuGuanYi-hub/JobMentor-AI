@@ -37,13 +37,16 @@ export async function renderStep8(container) {
   const jdAnalysis = store.get("jdAnalysis");
   const diagnose = store.get("diagnose");
   const interview = store.get("interview");
-  const previewData = collectBullets(optimize);
+  const previewData = collectBullets(optimize, input);
+  const previewDensityClass = (previewData.work.flatMap((item) => item.bullets || []).length + previewData.projects.flatMap((item) => item.bullets || []).length > 8 || previewData.skills.length > 18)
+    ? " resume-preview--multi"
+    : "";
 
   container.innerHTML = `
     <div class="step-page-header final-page-header">
       <div>
         <h1 class="step-page-title">最终简历的导出与对比</h1>
-        <p class="step-page-desc">支持 7 套简历模板。先确认预览，再导出可编辑的 Word 或适合投递的 PDF。</p>
+        <p class="step-page-desc">支持 7 套简历模板。完整经历与 AI 优化结果都会保留，内容较多时自动分页为 2 张 A4。</p>
       </div>
       <div class="final-page-status"><span class="status-dot"></span>分析已完成 · 8/8</div>
     </div>
@@ -171,7 +174,7 @@ export async function renderStep8(container) {
         <button class="ghost-btn" id="exportPdf">导出 PDF 文档</button>
       </div>
 
-      <div id="resumePreview" class="resume-preview template-${config.template}">
+      <div id="resumePreview" class="resume-preview template-${config.template}${previewDensityClass}">
         ${buildPreviewHTML(config, input, optimize, jdAnalysis)}
       </div>
     </div>
@@ -268,17 +271,18 @@ function thumbInner(key) {
 
 function buildPreviewHTML(config, input, optimize, jdAnalysis) {
   const color = config.color || "#5B6CFF";
-  const selectedBullets = collectBullets(optimize);
+  const selectedBullets = collectBullets(optimize, input);
+  const profile = extractResumeProfile(input?.resumeText);
   const note = config.note || "";
   const showAvatar = !!config.showAvatar;
   const input_avatar = input.avatar;
 
   return `
     <div class="preview-header" ${config.template === "classic" ? `style="background:${color};"` : ""}>
-      <div class="preview-name">曾子丹</div>
+      <div class="preview-name">${esc(profile.name || "曾子丹")}</div>
       <div class="preview-contact">
-        <span>📞 13800138000</span>
-        <span>✉️ zengzidan@example.com</span>
+        <span>📞 ${esc(profile.phone || "13800138000")}</span>
+        <span>✉️ ${esc(profile.email || "zengzidan@example.com")}</span>
         <span>📍 ${input?.target || ""}</span>
         <span>🎓 2027 届软件工程本科 · 专业前 5%</span>
       </div>
@@ -308,8 +312,8 @@ function buildPreviewHTML(config, input, optimize, jdAnalysis) {
     <div class="preview-section preview-education">
       <div class="preview-section-title">教育背景</div>
       <div class="preview-education-row">
-        <strong>软件工程本科</strong>
-        <span>2027 届 · 专业前 5%</span>
+        <strong>${esc(profile.education || "软件工程本科")}</strong>
+        <span>${esc(profile.educationDetail || "2027 届 · 专业前 5%")}</span>
       </div>
     </div>
     <div class="preview-section">
@@ -349,29 +353,25 @@ function buildPreviewHTML(config, input, optimize, jdAnalysis) {
   `;
 }
 
-function collectBullets(optimize) {
+function collectBullets(optimize, input = {}) {
+  const source = extractResumeProfile(input.resumeText);
   if (!optimize || !optimize.sections) {
-    return {
+    return mergeResumeContent({
       summary: "具备 Kotlin / Compose、Repository、Room / Retrofit 实践，能够从需求推进到测试验证。",
-      work: [
-        { company: "广东中科院信息工程研究所", role: "后端工程师实习生", period: "2026.04 - 2026.07", bullets: [
-          "参与数据聚合服务的开发与维护，涉及 Spark SQL / Flink",
-          "使用 Go 重建 ETL 流水线，吞吐提升约 30%",
-        ]},
-      ],
-      projects: [
-        { name: "SilverLink · 独立社区患者服务系统 + Android 客户端研发", role: "Android 客户端", period: "2024.10 - 2026.06", bullets: [
-          "基于 Jetpack Compose 独立完成 Android 客户端核心模块",
-          "设计 Repository 分层与离线数据降级机制，缓存回收无破坏性",
-          "优化健康监测时序查询，加载耗时从 1.2s 降至 0.4s",
-        ]},
-        { name: "辅助智能小组原型 Agent · AI 应用开发", role: "AI 应用", period: "2026.02", bullets: [
-          "基于 LangChain + WebClient 集成多 Agent，调度策略可热更新",
-          "构建数据驱动评估体系，识别召回/精确率提升 12pt",
-        ]},
-      ],
+      work: [{ company: "广东中科院信息工程研究所", role: "后端工程师实习生", period: "2026.04 - 2026.07", bullets: [
+        "参与数据聚合服务的开发与维护，涉及 Spark SQL / Flink",
+        "使用 Go 重建 ETL 流水线，吞吐提升约 30%",
+      ]}],
+      projects: [{ name: "SilverLink · 独立社区患者服务系统 + Android 客户端研发", role: "Android 客户端", period: "2024.10 - 2026.06", bullets: [
+        "基于 Jetpack Compose 独立完成 Android 客户端核心模块",
+        "设计 Repository 分层与离线数据降级机制，缓存回收无破坏性",
+        "优化健康监测时序查询，加载耗时从 1.2s 降至 0.4s",
+      ]}, { name: "辅助智能小组原型 Agent · AI 应用开发", role: "AI 应用", period: "2026.02", bullets: [
+        "基于 LangChain + WebClient 集成多 Agent，调度策略可热更新",
+        "构建数据驱动评估体系，识别召回/精确率提升 12pt",
+      ]}],
       skills: ["Kotlin", "Jetpack Compose", "MVVM", "Coroutines", "Flow", "Retrofit", "Room", "Git"],
-    };
+    }, source);
   }
 
   const result = { summary: "", work: [], projects: [], skills: [] };
@@ -392,7 +392,95 @@ function collectBullets(optimize) {
   if (!result.skills.length) {
     result.skills = ["Kotlin", "Jetpack Compose", "MVVM", "Coroutines", "Flow", "Retrofit", "Room", "Git"];
   }
-  return result;
+  return mergeResumeContent(result, source);
+}
+
+function mergeResumeContent(result, source) {
+  const merged = {
+    summary: result.summary || source.summary || "",
+    work: [...(result.work || [])],
+    projects: [...(result.projects || [])],
+    skills: [...(result.skills || [])],
+  };
+  for (const item of source.work || []) mergeExperience(merged.work, item);
+  for (const item of source.projects || []) mergeExperience(merged.projects, item);
+  merged.skills = [...new Set([...merged.skills, ...(source.skills || [])])];
+  return merged;
+}
+
+function mergeExperience(target, incoming) {
+  const match = target.find((item) => {
+    const left = `${item.name || item.company || ""}`;
+    const right = `${incoming.name || incoming.company || ""}`;
+    return (left && right && (left.includes(right) || right.includes(left))) ||
+      (item.period && incoming.period && item.period === incoming.period);
+  });
+  if (!match) {
+    target.push(incoming);
+    return;
+  }
+  const existing = match.bullets || [];
+  for (const bullet of incoming.bullets || []) {
+    if (!existing.some((current) => isEquivalentBullet(current, bullet))) existing.push(bullet);
+  }
+  match.bullets = existing;
+}
+
+function isEquivalentBullet(left = "", right = "") {
+  const tokenize = (value) => value.toLowerCase().match(/[a-z][a-z0-9+#./-]*|[\u4e00-\u9fff]{2,4}/g) || [];
+  const a = new Set(tokenize(left));
+  const b = new Set(tokenize(right));
+  if (!a.size || !b.size) return left.trim() === right.trim();
+  let overlap = 0;
+  for (const token of a) if (b.has(token)) overlap += 1;
+  return overlap / Math.min(a.size, b.size) >= 0.28;
+}
+
+function extractResumeProfile(text = "") {
+  const lines = String(text).split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const profile = { name: lines[0] || "", phone: "", email: "", education: "", educationDetail: "", summary: "", work: [], projects: [], skills: [] };
+  if (!lines.length) return profile;
+  profile.phone = lines.find((line) => /(?:1[3-9]\d{9}|电话|手机)/.test(line))?.match(/1[3-9]\d{9}/)?.[0] || "";
+  profile.email = lines.find((line) => /@/.test(line))?.match(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/)?.[0] || "";
+  const educationLine = lines.find((line) => /本科|硕士|博士|专业前|届/.test(line));
+  if (educationLine) {
+    const parts = educationLine.split(/[|｜]/).map((part) => part.trim()).filter(Boolean);
+    profile.education = parts[0] || "";
+    profile.educationDetail = parts.slice(1).join(" · ");
+  }
+  const sections = { project: [], work: [], skills: [] };
+  let current = "";
+  for (const line of lines.slice(1)) {
+    if (/项目经验|项目经历/.test(line)) { current = "project"; continue; }
+    if (/实习经历|工作经历|工作经验/.test(line)) { current = "work"; continue; }
+    if (/技能清单|技能工具|技术栈/.test(line)) { current = "skills"; continue; }
+    if (/^【.*】$/.test(line)) { current = ""; continue; }
+    if (current) sections[current].push(line);
+  }
+  profile.projects = parseExperienceLines(sections.project, "项目");
+  profile.work = parseExperienceLines(sections.work, "实习");
+  profile.skills = sections.skills.join(" ").split(/[,，、;；|:：]/).map((skill) => skill.trim()).filter((skill) => skill && skill.length < 30);
+  const intro = lines.slice(1).find((line) => !/^【|^[-•·]/.test(line) && !/时间[：:]/.test(line) && !/本科|专业前/.test(line));
+  profile.summary = intro || "";
+  return profile;
+}
+
+function parseExperienceLines(lines, fallbackRole) {
+  const result = [];
+  let current = null;
+  for (const line of lines) {
+    if (/^[-•·]/.test(line)) {
+      if (current) current.bullets.push(line.replace(/^[-•·]\s*/, ""));
+      continue;
+    }
+    const period = line.match(/时间[：:]\s*(.+)/);
+    if (period && current) { current.period = period[1].trim(); continue; }
+    if (line && !period) {
+      current = { name: line, company: line, role: fallbackRole, period: "", bullets: [] };
+      result.push(current);
+    }
+  }
+  return result.filter((item) => item.bullets.length || item.period);
 }
 
 function pickSelectedText(item) {

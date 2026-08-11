@@ -6,7 +6,7 @@ import { PROMPTS, buildUserPayload } from "./prompts.js";
 import { redact, mergeMaps, restoreTree } from "../privacy.js";
 import { createSilverLinkFullAnalysisExample } from "../data/silverlink-analysis-example.js";
 
-export const EXAMPLE_ANALYSIS_CACHE_KEY = "jobmentor-ai-example-analysis-v1";
+export const EXAMPLE_ANALYSIS_CACHE_KEY = "jobmentor-ai-example-analysis-v2";
 
 export const FULL_ANALYSIS_STEPS = [
   { step: 2, key: "jdAnalysis", label: "JD 解析", promptKey: "step2", temperature: 0.4 },

@@ -1232,6 +1232,11 @@
   font-size: 12.5px;
 }
 
+/* 内容较完整时允许 PDF 分页，并让最后的技能区块不被拆成“只有标签”的页尾。 */
+.resume-preview--multi .preview-section:last-child {
+  padding-top: 34px;
+}
+
 .export-bar {
   display: flex;
   justify-content: space-between;
