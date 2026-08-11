@@ -265,6 +265,30 @@
   line-height: 1.65;
 }
 
+.resume-preview.template-doublecol.resume-preview--multi .preview-main .preview-section {
+  margin-bottom: 18px;
+}
+
+.resume-preview.template-timeline.resume-preview--multi .preview-section {
+  margin-bottom: 12px;
+}
+
+.resume-preview.template-timeline.resume-preview--multi .timeline-item {
+  padding-bottom: 4px;
+}
+
+.resume-preview.template-comprehensive.resume-preview--multi .preview-section {
+  margin-bottom: 12px;
+}
+
+.resume-preview.template-github.resume-preview--multi .preview-section {
+  margin-bottom: 14px;
+}
+
+.resume-preview.template-ai.resume-preview--multi .preview-section {
+  margin-bottom: 14px;
+}
+
 /* Template 5: 综合稿件 */
 .resume-preview.template-comprehensive .preview-section-title {
   background: var(--accent-color, var(--primary));

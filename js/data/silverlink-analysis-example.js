@@ -72,7 +72,7 @@ export function createSilverLinkFullAnalysisExample() {
         {
           type: "summary",
           title: "Summary · 个人简介",
-          items: [{ label: "求职摘要", original: "软件工程本科，做过后端和客户端项目", data: "软件工程本科，具备 Android、后端和 AI 应用工程实践", lead: "主导完成 Android 客户端核心功能并参与接口联调", authentic: "具备 Kotlin / Compose、Repository、Room / Retrofit 实践，能够从需求推进到测试验证", jdAligned: "突出 Android 模块开发、接口联调和问题定位能力" }],
+          items: [{ label: "求职摘要", original: "软件工程本科，做过后端和客户端项目", data: "软件工程本科，具备 Android、后端和 AI 应用工程实践", lead: "主导完成 Android 客户端核心功能并参与接口联调", authentic: "软件工程本科，具备 Android 客户端、后端服务与 AI Agent 应用实践。熟悉 Kotlin、Jetpack Compose、MVVM、Repository、Room、Retrofit 和 Spring Boot，能够从需求拆解、页面与接口开发推进到联调、问题定位和测试验证。", jdAligned: "突出 Android 模块开发、接口联调、性能优化和问题分析能力" }],
         },
         {
           type: "projectExperience",
@@ -93,6 +93,9 @@ export function createSilverLinkFullAnalysisExample() {
           items: [
             { label: "多 Agent 编排", original: "集成多个 Agent", data: "基于 LangChain + WebClient 集成多 Agent", lead: "设计可热更新的多 Agent 调度策略", authentic: "基于 LangChain + WebClient 集成多 Agent，调度策略可热更新", jdAligned: "对应 AI 应用开发、接口设计和工程协作" },
             { label: "评估体系", original: "完成效果评估", data: "建立数据驱动的召回与精确率评估", lead: "构建数据驱动评估体系并定位效果瓶颈", authentic: "构建数据驱动评估体系，识别召回/精确率提升 12pt", jdAligned: "对应问题分析、数据验证和持续优化" },
+            { label: "场景建模", original: "处理校园事务咨询", data: "围绕学生事务咨询、通知查询和材料指导搭建服务场景", lead: "将高频校园事务拆解为可调用的 Agent 技能", authentic: "面向学生事务咨询、通知查询和材料指导等场景，基于大语言模型与 Agent 框架搭建校园服务对话引擎，支持多轮对话与任务流程梳理", jdAligned: "对应需求分析、模块设计和 AI 应用落地" },
+            { label: "技能设计", original: "拆解高频事务", data: "设计意图识别、上下文记忆和任务状态联动", lead: "将请假、证明材料、奖助学金和活动通知等流程沉淀为可复用技能", authentic: "将请假、证明材料、奖助学金、活动通知等高频事务拆解为可调用技能，设计意图识别、上下文记忆和任务状态联动", jdAligned: "对应功能开发、状态管理和业务流程设计" },
+            { label: "协同接入", original: "接入协同平台", data: "通过 Webhook / WebSocket 接入协同平台", lead: "设计事件触发链路并处理消息与任务状态联动", authentic: "通过 Webhook/WebSocket 接入协同平台，设计事件触发链路，处理对话消息、流程节点和任务状态之间的联动", jdAligned: "对应接口联调、异步通信和问题排查" },
           ],
         },
         {

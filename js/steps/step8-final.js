@@ -38,9 +38,7 @@ export async function renderStep8(container) {
   const diagnose = store.get("diagnose");
   const interview = store.get("interview");
   const previewData = collectBullets(optimize, input);
-  const previewDensityClass = (previewData.work.flatMap((item) => item.bullets || []).length + previewData.projects.flatMap((item) => item.bullets || []).length > 8 || previewData.skills.length > 18)
-    ? " resume-preview--multi"
-    : "";
+  const previewDensityClass = getPreviewDensityClass(previewData);
 
   container.innerHTML = `
     <div class="step-page-header final-page-header">
@@ -357,7 +355,7 @@ function collectBullets(optimize, input = {}) {
   const source = extractResumeProfile(input.resumeText);
   if (!optimize || !optimize.sections) {
     return mergeResumeContent({
-      summary: "具备 Kotlin / Compose、Repository、Room / Retrofit 实践，能够从需求推进到测试验证。",
+      summary: "软件工程本科，具备 Android 客户端、后端服务与 AI Agent 应用实践。熟悉 Kotlin、Jetpack Compose、MVVM、Repository、Room、Retrofit 和 Spring Boot，能够从需求拆解、页面与接口开发推进到联调、问题定位和测试验证。",
       work: [{ company: "广东中科院信息工程研究所", role: "后端工程师实习生", period: "2026.04 - 2026.07", bullets: [
         "参与数据聚合服务的开发与维护，涉及 Spark SQL / Flink",
         "使用 Go 重建 ETL 流水线，吞吐提升约 30%",
@@ -369,6 +367,9 @@ function collectBullets(optimize, input = {}) {
       ]}, { name: "辅助智能小组原型 Agent · AI 应用开发", role: "AI 应用", period: "2026.02", bullets: [
         "基于 LangChain + WebClient 集成多 Agent，调度策略可热更新",
         "构建数据驱动评估体系，识别召回/精确率提升 12pt",
+        "面向学生事务咨询、通知查询和材料指导等场景，基于大语言模型与 Agent 框架搭建校园服务对话引擎，支持多轮对话与任务流程梳理",
+        "将请假、证明材料、奖助学金、活动通知等高频事务拆解为可调用技能，设计意图识别、上下文记忆和任务状态联动",
+        "通过 Webhook/WebSocket 接入协同平台，设计事件触发链路，处理对话消息、流程节点和任务状态之间的联动",
       ]}],
       skills: ["Kotlin", "Jetpack Compose", "MVVM", "Coroutines", "Flow", "Retrofit", "Room", "Git"],
     }, source);
@@ -499,6 +500,12 @@ function pickSelectedText(item) {
   return item[item.selectedVariant || "authentic"] || item.authentic || item.jdAligned || item.lead || item.original || "";
 }
 
+function getPreviewDensityClass(previewData) {
+  const bulletCount = (previewData.work || []).flatMap((item) => item.bullets || []).length +
+    (previewData.projects || []).flatMap((item) => item.bullets || []).length;
+  return bulletCount > 8 || (previewData.skills || []).length > 18 ? " resume-preview--multi" : "";
+}
+
 function bindEvents(container, config) {
   // 模板选择
   container.querySelectorAll(".template-card").forEach(card => {
@@ -598,7 +605,7 @@ function bindEvents(container, config) {
     const jdAnalysis = store.get("jdAnalysis");
     const previewEl = c.querySelector("#resumePreview");
     if (previewEl) {
-      previewEl.className = `resume-preview template-${cur.template}`;
+      previewEl.className = `resume-preview template-${cur.template}${getPreviewDensityClass(collectBullets(optimize, input))}`;
       previewEl.innerHTML = buildPreviewHTML(cur, input, optimize, jdAnalysis);
     }
     syncTemplateUi(c);
