@@ -7,32 +7,45 @@ import { exportElementToPdf, buildFullReportHtml } from "../export/pdf.js";
 import { exportResumeToDocx } from "../export/docx.js";
 
 const TEMPLATES = [
-  { key: "modern", name: "简约现代卡片", recommended: false },
-  { key: "timeline", name: "时间轴模板", recommended: true },
-  { key: "classic", name: "经典 header", recommended: false },
-  { key: "doublecol", name: "双栏卡片版", recommended: false },
-  { key: "comprehensive", name: "经典综合稿件", recommended: false },
-  { key: "github", name: "GitHub 综合代", recommended: false },
-  { key: "ai", name: "AI 工具稿件模板", recommended: false },
+  { key: "modern", name: "简约现代卡片", description: "清晰留白，适合校招与实习", recommended: false },
+  { key: "timeline", name: "时间轴模板", description: "突出成长路径与项目节奏", recommended: true },
+  { key: "classic", name: "经典 Header", description: "正式稳重，适合传统岗位", recommended: false },
+  { key: "doublecol", name: "双栏卡片版", description: "侧栏承载技能，正文更紧凑", recommended: false },
+  { key: "comprehensive", name: "经典综合稿件", description: "信息密度高，适合完整履历", recommended: false },
+  { key: "github", name: "GitHub 综合版", description: "技术感强，适合开发岗位", recommended: false },
+  { key: "ai", name: "AI 工具稿件", description: "突出 AI 项目与技术栈", recommended: false },
 ];
 
 const COLORS = [
   "#5B6CFF", "#8E6BFF", "#22C55E", "#F59E0B", "#EF4444",
 ];
 
+function getTemplate(key) {
+  return TEMPLATES.find((template) => template.key === key) || TEMPLATES[0];
+}
+
 export async function renderStep8(container) {
-  const config = store.get("resumeConfig") || { template: "timeline", color: "#5B6CFF" };
+  const config = {
+    template: "timeline",
+    color: "#5B6CFF",
+    showAvatar: false,
+    note: "",
+    ...(store.get("resumeConfig") || {}),
+  };
   const input = store.get("input");
   const optimize = store.get("optimize");
   const jdAnalysis = store.get("jdAnalysis");
   const diagnose = store.get("diagnose");
+  const interview = store.get("interview");
+  const previewData = collectBullets(optimize);
 
   container.innerHTML = `
-    <div class="step-page-header">
+    <div class="step-page-header final-page-header">
       <div>
         <h1 class="step-page-title">最终简历的导出与对比</h1>
-        <p class="step-page-desc">支持 5 套简历模板，AI 帮你选择布局和排版、支持 PDF / Word 简码排版和导出…一键导出 Word / PDF 文件</p>
+        <p class="step-page-desc">支持 7 套简历模板。先确认预览，再导出可编辑的 Word 或适合投递的 PDF。</p>
       </div>
+      <div class="final-page-status"><span class="status-dot"></span>分析已完成 · 8/8</div>
     </div>
 
     <div class="template-tabs">
@@ -56,21 +69,64 @@ export async function renderStep8(container) {
       <div class="version-compare" id="versionCompare"></div>
     </div>
 
+    <div class="section-card final-tab-panel hidden" id="comparePanel">
+      <div class="card-title">面试对照</div>
+      <p class="text-muted" style="font-size:12px;">把最终简历中的重点经历与面试准备结果放在一起，方便导出前快速复核。</p>
+      <div class="final-tab-grid">
+        <div class="final-tab-block">
+          <div class="final-tab-block-title">自我介绍</div>
+          <p>${esc(interview?.selfIntro || previewData.summary || "暂无面试准备结果")}</p>
+        </div>
+        <div class="final-tab-block">
+          <div class="final-tab-block-title">重点追问</div>
+          <ul class="final-tab-list">
+            ${(interview?.behaviorQuestions || []).slice(0, 3).map((question) => `<li>${esc(typeof question === "string" ? question : question.question)}</li>`).join("") || "<li>暂无行为面试问题</li>"}
+            ${(interview?.techQuestions || []).slice(0, 3).map((question) => `<li>${esc(typeof question === "string" ? question : question.question)}</li>`).join("")}
+          </ul>
+        </div>
+      </div>
+      <a class="ghost-btn final-tab-link" href="#/step/7">查看完整面试准备 →</a>
+    </div>
+
+    <div class="section-card final-tab-panel hidden" id="techPanel">
+      <div class="card-title">技术词汇</div>
+      <p class="text-muted" style="font-size:12px;">来自 JD 与简历优化结果的关键词，可在导出前检查是否覆盖目标岗位要求。</p>
+      <div class="tech-vocabulary-group">
+        <div class="final-tab-block-title">JD 关键词</div>
+        <div class="tech-vocabulary-list">
+          ${(jdAnalysis?.keywords || []).map((keyword) => `<span class="preview-skill">${esc(keyword)}</span>`).join("") || "<span class=\"text-muted\">暂无 JD 关键词</span>"}
+        </div>
+      </div>
+      <div class="tech-vocabulary-group">
+        <div class="final-tab-block-title">简历技术栈</div>
+        <div class="tech-vocabulary-list">
+          ${(previewData.skills || []).map((skill) => `<span class="preview-skill">${esc(skill)}</span>`).join("")}
+        </div>
+      </div>
+    </div>
+
     <!-- 模板画廊 -->
-    <div class="section-card">
-      <div class="card-title">选择简历模板</div>
-      <p class="text-muted" style="font-size:12px;">实时预览样式 渲染 · 简历图形差异可见</p>
+    <div class="section-card template-section">
+      <div class="template-section-heading">
+        <div>
+          <div class="card-title">选择简历模板</div>
+          <p class="text-muted" style="font-size:12px;">点击模板即可切换预览，导出的 PDF 会保持当前版式。</p>
+        </div>
+        <div class="template-current" id="activeTemplateLabel">当前：${esc(getTemplate(config.template).name)}</div>
+      </div>
       <div class="template-gallery">
         ${TEMPLATES.map(t => `
-          <div class="template-card ${t.key === config.template ? "active" : ""}" data-template="${t.key}">
+          <button type="button" class="template-card ${t.key === config.template ? "active" : ""}" data-template="${t.key}" aria-pressed="${t.key === config.template}">
             <div class="template-card-img">
               ${t.recommended ? `<span class="rec-badge">推荐</span>` : ""}
+              <span class="template-card-check">${t.key === config.template ? "当前选择" : ""}</span>
               <div class="thumb-decor thumb-${t.key === "github" ? "github" : t.key === "ai" ? "ai" : t.key === "timeline" ? "timeline" : t.key === "classic" ? "classic" : t.key === "doublecol" ? "doublecol" : t.key === "comprehensive" ? "comprehensive" : "modern"}">
                 ${thumbInner(t.key)}
               </div>
             </div>
-            <div class="template-card-name">${t.name}</div>
-          </div>
+            <span class="template-card-name">${t.name}</span>
+            <span class="template-card-desc">${t.description}</span>
+          </button>
         `).join("")}
       </div>
     </div>
@@ -122,16 +178,16 @@ export async function renderStep8(container) {
 
     <!-- 完整简历分析 -->
     <div class="section-card">
-      <div class="card-title">完整简历分析诊断问题导出</div>
-      <p class="text-muted" style="font-size:12px;">您所选的简历以 AI 智能诊断为基础，下列内容可下载为 PDF 版本。</p>
+      <div class="card-title">分析摘要</div>
+      <p class="text-muted" style="font-size:12px;">这里汇总本次分析结果；如需投递，请导出上方的当前简历预览。</p>
       <div class="grid grid-cols-3 gap-3" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:var(--gap-3);margin-top:var(--gap-3);">
         <div class="card text-center">
           <div class="text-muted" style="font-size:11px;">匹配综合得分</div>
           <div style="font-size:32px;font-weight:700;color:var(--primary);font-variant-numeric:tabular-nums;">${diagnose?.overall || 0}<span style="font-size:14px;color:var(--text-3);"> / 100</span></div>
         </div>
         <div class="card text-center">
-          <div class="text-muted" style="font-size:11px;">人工模拟优化</div>
-          <div style="font-size:32px;font-weight:700;color:var(--text-1);">${optimize ? "已优化" : "未优化"}</div>
+          <div class="text-muted" style="font-size:11px;">简历优化状态</div>
+          <div style="font-size:32px;font-weight:700;color:var(--text-1);">${optimize ? "已生成" : "待生成"}</div>
         </div>
         <div class="card text-center">
           <div class="text-muted" style="font-size:11px;">简历内容质量</div>
@@ -143,16 +199,17 @@ export async function renderStep8(container) {
     <!-- 底部导出栏 -->
     <div class="export-bar">
       <div>
-        <div style="font-size:13px;font-weight:500;">导出您的最终简历</div>
-        <div class="text-muted" style="font-size:11px;">建议先在 Word 中二次校样，再导出 PDF 投递</div>
+        <div class="export-eyebrow">EXPORT STUDIO</div>
+        <div style="font-size:13px;font-weight:600;">导出当前模板</div>
+        <div class="text-muted" style="font-size:11px;">当前：<span id="exportTemplateLabel">${esc(getTemplate(config.template).name)}</span> · Word 可编辑，PDF 适合投递</div>
       </div>
       <div class="export-actions">
         <button class="primary-btn" id="finalExportPdf">
           <i data-lucide="download" width="14"></i>
-          <span>导出近期删减 PDF（8K+MAU 模式 + 副本 + 配电设置）</span>
+          <span>导出 PDF</span>
         </button>
-        <button class="ghost-btn" id="exportWord2">(可选) Word 排版 PDF</button>
-        <button class="ghost-btn" id="exportPrint">(可选) 独立打印 PDF</button>
+        <button class="ghost-btn" id="exportWord2">导出 Word</button>
+        <button class="ghost-btn" id="exportPrint">打印 / 另存为 PDF</button>
       </div>
     </div>
   `;
@@ -229,6 +286,8 @@ function buildPreviewHTML(config, input, optimize, jdAnalysis) {
       ${showAvatar && input_avatar ? `<img src="${input_avatar}" style="width:80px;height:80px;border-radius:50%;float:right;margin-top:-60px;" />` : ""}
     </div>
 
+    <div class="preview-body">
+      <aside class="preview-aside">
     <div class="preview-section" style="--accent-color:${color};">
       <div class="preview-section-title">核心能力</div>
       <div class="preview-skills">
@@ -238,6 +297,21 @@ function buildPreviewHTML(config, input, optimize, jdAnalysis) {
       </div>
     </div>
 
+      </aside>
+      <div class="preview-main">
+    ${selectedBullets.summary ? `
+    <div class="preview-section preview-summary">
+      <div class="preview-section-title">个人简介</div>
+      <p class="preview-summary-text">${esc(selectedBullets.summary)}</p>
+    </div>
+    ` : ""}
+    <div class="preview-section preview-education">
+      <div class="preview-section-title">教育背景</div>
+      <div class="preview-education-row">
+        <strong>软件工程本科</strong>
+        <span>2027 届 · 专业前 5%</span>
+      </div>
+    </div>
     <div class="preview-section">
       <div class="preview-section-title">工作 / 实习经历</div>
       ${(selectedBullets.work || []).map(w => `
@@ -267,14 +341,9 @@ function buildPreviewHTML(config, input, optimize, jdAnalysis) {
     <div class="preview-section">
       <div class="preview-section-title">技能工具</div>
       <div class="preview-skills">
-        <span class="preview-skill" style="background:${color}15;color:${color};">Kotlin</span>
-        <span class="preview-skill" style="background:${color}15;color:${color};">Jetpack Compose</span>
-        <span class="preview-skill" style="background:${color}15;color:${color};">MVVM</span>
-        <span class="preview-skill" style="background:${color}15;color:${color};">Coroutines</span>
-        <span class="preview-skill" style="background:${color}15;color:${color};">Flow</span>
-        <span class="preview-skill" style="background:${color}15;color:${color};">Retrofit</span>
-        <span class="preview-skill" style="background:${color}15;color:${color};">Room</span>
-        <span class="preview-skill" style="background:${color}15;color:${color};">Git</span>
+        ${(selectedBullets.skills || []).map((skill) => `<span class="preview-skill" style="background:${color}15;color:${color};">${esc(skill)}</span>`).join("")}
+      </div>
+    </div>
       </div>
     </div>
   `;
@@ -283,6 +352,7 @@ function buildPreviewHTML(config, input, optimize, jdAnalysis) {
 function collectBullets(optimize) {
   if (!optimize || !optimize.sections) {
     return {
+      summary: "具备 Kotlin / Compose、Repository、Room / Retrofit 实践，能够从需求推进到测试验证。",
       work: [
         { company: "广东中科院信息工程研究所", role: "后端工程师实习生", period: "2026.04 - 2026.07", bullets: [
           "参与数据聚合服务的开发与维护，涉及 Spark SQL / Flink",
@@ -300,28 +370,51 @@ function collectBullets(optimize) {
           "构建数据驱动评估体系，识别召回/精确率提升 12pt",
         ]},
       ],
+      skills: ["Kotlin", "Jetpack Compose", "MVVM", "Coroutines", "Flow", "Retrofit", "Room", "Git"],
     };
   }
 
-  const result = { work: [], projects: [] };
+  const result = { summary: "", work: [], projects: [], skills: [] };
   optimize.sections.forEach(sec => {
-    const items = (sec.items || []).map(it => it[it.selectedVariant || "authentic"] || it.authentic || it.original || "").filter(Boolean);
+    const items = (sec.items || []).map(pickSelectedText).filter(Boolean);
+    if (sec.type === "summary") {
+      result.summary = items[0] || result.summary;
+      return;
+    }
     if (sec.type === "workExperience") {
       result.work.push({ company: sec.title || "实习", role: "", period: sec.period || "", bullets: items });
     } else if (sec.type === "projectExperience") {
       result.projects.push({ name: sec.title || "项目", role: "", period: sec.period || "", bullets: items });
+    } else if (sec.type === "skillsAndTools") {
+      result.skills.push(...items.flatMap((item) => item.split(/[；;、|]/).map((skill) => skill.trim()).filter(Boolean)));
     }
   });
+  if (!result.skills.length) {
+    result.skills = ["Kotlin", "Jetpack Compose", "MVVM", "Coroutines", "Flow", "Retrofit", "Room", "Git"];
+  }
   return result;
+}
+
+function pickSelectedText(item) {
+  if (!item) return "";
+  return item[item.selectedVariant || "authentic"] || item.authentic || item.jdAligned || item.lead || item.original || "";
 }
 
 function bindEvents(container, config) {
   // 模板选择
   container.querySelectorAll(".template-card").forEach(card => {
-    card.addEventListener("click", () => {
+    const selectTemplate = () => {
       const tpl = card.getAttribute("data-template");
       store.set({ resumeConfig: { template: tpl } });
+      syncTemplateUi(container);
       rerenderPreview(container);
+    };
+    card.addEventListener("click", selectTemplate);
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        selectTemplate();
+      }
     });
   });
 
@@ -367,13 +460,17 @@ function bindEvents(container, config) {
       container.querySelectorAll(".template-tab").forEach(t => t.classList.remove("active"));
       tab.classList.add("active");
       const tabName = tab.getAttribute("data-tab");
-      const versionPanel = container.querySelector("#versionPanel");
-      if (versionPanel) {
-        versionPanel.classList.toggle("hidden", tabName !== "versions");
-      }
+      const panels = {
+        versions: container.querySelector("#versionPanel"),
+        compare: container.querySelector("#comparePanel"),
+        tech: container.querySelector("#techPanel"),
+      };
+      Object.entries(panels).forEach(([name, panel]) => {
+        panel?.classList.toggle("hidden", tabName !== name);
+      });
       if (tabName === "versions") {
         renderVersionList(container);
-      } else if (tabName !== "resume") {
+      } else if (tabName !== "resume" && !["compare", "tech"].includes(tabName)) {
         toast(`「${tab.textContent}」视图开发中…`, "info");
       }
     });
@@ -390,7 +487,7 @@ function bindEvents(container, config) {
   container.querySelector("#exportPdf")?.addEventListener("click", exportToPdf);
   container.querySelector("#finalExportPdf")?.addEventListener("click", exportToPdf);
   container.querySelector("#exportWord2")?.addEventListener("click", exportToWord);
-  container.querySelector("#exportPrint")?.addEventListener("click", () => window.print());
+  container.querySelector("#exportPrint")?.addEventListener("click", printResume);
 
   // 标记完成
   store.markStepDone(8);
@@ -405,6 +502,23 @@ function bindEvents(container, config) {
       previewEl.className = `resume-preview template-${cur.template}`;
       previewEl.innerHTML = buildPreviewHTML(cur, input, optimize, jdAnalysis);
     }
+    syncTemplateUi(c);
+  }
+
+  function syncTemplateUi(c) {
+    const current = store.get("resumeConfig") || {};
+    const template = getTemplate(current.template);
+    c.querySelectorAll(".template-card").forEach((card) => {
+      const selected = card.getAttribute("data-template") === template.key;
+      card.classList.toggle("active", selected);
+      card.setAttribute("aria-pressed", String(selected));
+      const check = card.querySelector(".template-card-check");
+      if (check) check.textContent = selected ? "当前选择" : "";
+    });
+    const activeLabel = c.querySelector("#activeTemplateLabel");
+    if (activeLabel) activeLabel.textContent = `当前：${template.name}`;
+    const exportLabel = c.querySelector("#exportTemplateLabel");
+    if (exportLabel) exportLabel.textContent = template.name;
   }
 
   // 渲染版本列表
@@ -639,10 +753,13 @@ async function copyTextToClipboard() {
 async function exportToPdf() {
   const previewEl = document.getElementById("resumePreview");
   if (!previewEl) return;
+  const template = getTemplate(store.get("resumeConfig")?.template).key;
+  const button = document.activeElement;
+  setExportBusy(true);
   toast("正在生成 PDF…", "info", 5000);
   try {
     await exportElementToPdf(previewEl, {
-      filename: `resume-${Date.now()}.pdf`,
+      filename: `resume-${template}-${Date.now()}.pdf`,
       format: "a4",
       scale: 2,
     });
@@ -650,20 +767,56 @@ async function exportToPdf() {
   } catch (e) {
     console.error(e);
     toast("PDF 导出失败：" + e.message, "error");
+  } finally {
+    setExportBusy(false, button);
   }
 }
 
 async function exportToWord() {
   const previewEl = document.getElementById("resumePreview");
   if (!previewEl) return;
+  const button = document.activeElement;
+  const config = store.get("resumeConfig") || {};
+  setExportBusy(true);
   try {
     const resume = buildResumeObjectFromPreview(previewEl);
-    await exportResumeToDocx(resume, `resume-${Date.now()}.docx`);
+    await exportResumeToDocx(resume, `resume-${getTemplate(config.template).key}-${Date.now()}.docx`, {
+      template: config.template,
+      color: config.color,
+    });
     toast("Word 文档已下载", "success");
   } catch (e) {
     console.error(e);
     toast("Word 导出失败：" + e.message, "error");
+  } finally {
+    setExportBusy(false, button);
   }
+}
+
+function setExportBusy(busy, restoreFocus = null) {
+  const root = document.getElementById("content");
+  if (!root) return;
+  root.querySelectorAll("#copyText, #exportWord, #exportPdf, #finalExportPdf, #exportWord2, #exportPrint")
+    .forEach((button) => {
+      button.disabled = busy;
+      button.classList.toggle("is-loading", busy);
+    });
+  if (!busy && restoreFocus?.focus) restoreFocus.focus();
+}
+
+function printResume() {
+  const preview = document.getElementById("resumePreview");
+  if (!preview) return;
+  const shell = preview.closest(".card");
+  document.body.classList.add("printing-resume");
+  shell?.classList.add("print-resume-shell");
+  const cleanup = () => {
+    document.body.classList.remove("printing-resume");
+    shell?.classList.remove("print-resume-shell");
+    window.removeEventListener("afterprint", cleanup);
+  };
+  window.addEventListener("afterprint", cleanup);
+  window.print();
 }
 
 // 从预览 DOM 提取结构化简历（供 Word 导出）
@@ -672,6 +825,8 @@ function buildResumeObjectFromPreview(previewEl) {
     basics: {
       name: previewEl.querySelector(".preview-name")?.textContent?.trim() || "我的简历",
     },
+    summary: previewEl.querySelector(".preview-summary-text")?.textContent?.trim() || "",
+    education: previewEl.querySelector(".preview-education-row")?.textContent?.trim() || "",
     competencies: [],
     workExperience: [],
     projects: [],

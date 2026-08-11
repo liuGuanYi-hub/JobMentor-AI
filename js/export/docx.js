@@ -5,19 +5,23 @@
  * @param {Object} resume - { basics, competencies, workExperience, projects, skills }
  * @param {string} filename
  */
-export async function exportResumeToDocx(resume, filename = "resume.docx") {
+export async function exportResumeToDocx(resume, filename = "resume.docx", options = {}) {
   if (!window.docx) {
     throw new Error("Word 库未加载，请检查网络");
   }
   const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = window.docx;
+  const template = options.template || "timeline";
+  const accent = normalizeColor(options.color || "#5B6CFF");
+  const titleColor = template === "github" ? "24292E" : accent;
+  const titleAlignment = template === "github" ? AlignmentType.LEFT : AlignmentType.CENTER;
 
   const children = [];
 
   // 基本信息
   const name = resume?.basics?.name || "我的简历";
   children.push(new Paragraph({
-    children: [new TextRun({ text: name, bold: true, size: 40, color: "2D3BFF" })],
-    alignment: AlignmentType.CENTER,
+    children: [new TextRun({ text: name, bold: true, size: 40, color: titleColor, font: template === "github" ? "Courier New" : undefined })],
+    alignment: titleAlignment,
     spacing: { after: 120 },
   }));
 
@@ -26,15 +30,31 @@ export async function exportResumeToDocx(resume, filename = "resume.docx") {
     .join("  |  ");
   if (contact) {
     children.push(new Paragraph({
-      children: [new TextRun({ text: contact, size: 20, color: "666666" })],
-      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: contact, size: 20, color: "666666", font: template === "github" ? "Courier New" : undefined })],
+      alignment: titleAlignment,
       spacing: { after: 200 },
+    }));
+  }
+
+  if (resume?.summary) {
+    children.push(sectionHeading("个人简介", Paragraph, TextRun, HeadingLevel, accent));
+    children.push(new Paragraph({
+      children: [new TextRun({ text: resume.summary, size: 20, color: "444444" })],
+      spacing: { after: 120 },
+    }));
+  }
+
+  if (resume?.education) {
+    children.push(sectionHeading("教育背景", Paragraph, TextRun, HeadingLevel, accent));
+    children.push(new Paragraph({
+      children: [new TextRun({ text: resume.education, size: 20, color: "444444" })],
+      spacing: { after: 120 },
     }));
   }
 
   // 核心能力
   if (resume?.competencies?.length) {
-    children.push(sectionHeading("核心能力", Paragraph, TextRun, HeadingLevel));
+    children.push(sectionHeading("核心能力", Paragraph, TextRun, HeadingLevel, accent));
     resume.competencies.forEach((c) => {
       children.push(new Paragraph({
         children: [new TextRun({ text: `• ${c}` })],
@@ -45,7 +65,7 @@ export async function exportResumeToDocx(resume, filename = "resume.docx") {
 
   // 工作/实习经历
   if (resume?.workExperience?.length) {
-    children.push(sectionHeading("工作 / 实习经历", Paragraph, TextRun, HeadingLevel));
+    children.push(sectionHeading("工作 / 实习经历", Paragraph, TextRun, HeadingLevel, accent));
     resume.workExperience.forEach((w) => {
       children.push(new Paragraph({
         children: [
@@ -71,7 +91,7 @@ export async function exportResumeToDocx(resume, filename = "resume.docx") {
 
   // 项目经历
   if (resume?.projects?.length) {
-    children.push(sectionHeading("项目经历", Paragraph, TextRun, HeadingLevel));
+    children.push(sectionHeading("项目经历", Paragraph, TextRun, HeadingLevel, accent));
     resume.projects.forEach((p) => {
       children.push(new Paragraph({
         children: [
@@ -97,7 +117,7 @@ export async function exportResumeToDocx(resume, filename = "resume.docx") {
 
   // 技能
   if (resume?.skills?.length) {
-    children.push(sectionHeading("技能工具", Paragraph, TextRun, HeadingLevel));
+    children.push(sectionHeading("技能工具", Paragraph, TextRun, HeadingLevel, accent));
     children.push(new Paragraph({
       children: [new TextRun({ text: resume.skills.join("  ·  ") })],
       spacing: { after: 40 },
@@ -117,13 +137,18 @@ export async function exportResumeToDocx(resume, filename = "resume.docx") {
   return true;
 }
 
-function sectionHeading(text, Paragraph, TextRun, HeadingLevel) {
+function sectionHeading(text, Paragraph, TextRun, HeadingLevel, accent) {
   return new Paragraph({
-    children: [new TextRun({ text, bold: true, size: 28, color: "2D3BFF" })],
+    children: [new TextRun({ text, bold: true, size: 28, color: normalizeColor(accent) })],
     heading: HeadingLevel.HEADING_1,
     spacing: { before: 240, after: 120 },
     border: {
-      bottom: { style: "single", size: 4, color: "5B6CFF" },
+      bottom: { style: "single", size: 4, color: normalizeColor(accent) },
     },
   });
+}
+
+function normalizeColor(color) {
+  const value = String(color || "#5B6CFF").replace(/^#/, "").toUpperCase();
+  return /^[0-9A-F]{6}$/.test(value) ? value : "5B6CFF";
 }

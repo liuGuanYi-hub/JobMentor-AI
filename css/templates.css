@@ -187,12 +187,12 @@
 }
 
 .resume-preview.template-timeline .preview-section-title {
-  margin-bottom: var(--gap-4);
+  margin-bottom: 12px;
 }
 
 .resume-preview.template-timeline .timeline-item {
   position: relative;
-  padding-bottom: var(--gap-4);
+  padding-bottom: 12px;
 }
 
 .resume-preview.template-timeline .timeline-item::before {
@@ -219,9 +219,9 @@
 .resume-preview.template-classic .preview-header {
   background: var(--accent-color, var(--primary));
   color: #fff;
-  margin: calc(-1 * var(--gap-5)) calc(-1 * var(--gap-5)) var(--gap-5);
-  padding: var(--gap-5);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  margin: calc(-1 * var(--preview-padding, var(--gap-5))) calc(-1 * var(--preview-padding, var(--gap-5))) var(--gap-5);
+  padding: var(--preview-padding, var(--gap-5));
+  border-radius: 2px 2px 0 0;
   border-bottom: none;
 }
 
@@ -241,14 +241,23 @@
 /* Template 4: 双栏 */
 .resume-preview.template-doublecol .preview-body {
   display: grid;
-  grid-template-columns: 30% 1fr;
-  gap: var(--gap-5);
+  grid-template-columns: minmax(170px, 30%) minmax(0, 1fr);
+  gap: 22px;
 }
 
 .resume-preview.template-doublecol .preview-aside {
   background: var(--bg);
-  margin: calc(-1 * var(--gap-5));
-  padding: var(--gap-5);
+  margin: 0;
+  padding: 16px;
+  border-radius: var(--radius);
+}
+
+.resume-preview.template-doublecol .preview-main {
+  min-width: 0;
+}
+
+.resume-preview.template-doublecol .preview-main .preview-section {
+  margin-bottom: 42px;
 }
 
 /* Template 5: 综合稿件 */
@@ -258,11 +267,15 @@
   padding: 6px 12px;
   border-radius: 4px;
   display: inline-block;
-  margin-bottom: var(--gap-3);
+  margin-bottom: 12px;
 }
 
 .resume-preview.template-comprehensive .preview-section-title::before {
   display: none;
+}
+
+.resume-preview.template-comprehensive .preview-section {
+  margin-bottom: 32px;
 }
 
 /* GitHub Style */
@@ -274,9 +287,9 @@
 .resume-preview.template-github .preview-header {
   background: #24292e;
   color: #fff;
-  margin: calc(-1 * var(--gap-5)) calc(-1 * var(--gap-5)) var(--gap-5);
-  padding: var(--gap-4) var(--gap-5);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  margin: calc(-1 * var(--preview-padding, var(--gap-5))) calc(-1 * var(--preview-padding, var(--gap-5))) var(--gap-5);
+  padding: 18px 22px;
+  border-radius: 2px 2px 0 0;
   border-bottom: none;
   font-family: var(--font-mono);
 }
@@ -289,6 +302,20 @@
 .resume-preview.template-github .preview-section-title {
   font-family: var(--font-mono);
   color: #24292e;
+}
+
+.resume-preview.template-github .preview-section {
+  margin-bottom: 42px;
+}
+
+.resume-preview.template-github .preview-bullet {
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.resume-preview.template-github .preview-header {
+  padding-top: 24px;
+  padding-bottom: 24px;
 }
 
 .resume-preview.template-github .preview-section-title::before {
@@ -307,8 +334,12 @@
 
 .resume-preview.template-ai .preview-header {
   background: var(--primary-light);
-  margin: calc(-1 * var(--gap-5)) calc(-1 * var(--gap-5)) var(--gap-5);
-  padding: var(--gap-5);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  margin: calc(-1 * var(--preview-padding, var(--gap-5))) calc(-1 * var(--preview-padding, var(--gap-5))) var(--gap-5);
+  padding: 20px var(--preview-padding, var(--gap-5));
+  border-radius: 2px 2px 0 0;
   border-bottom: none;
+}
+
+.resume-preview.template-ai .preview-section {
+  margin-bottom: 42px;
 }

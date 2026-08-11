@@ -80,6 +80,20 @@ const state = {
   currentTaskId: taskId,
 };
 
+async function assertDownload(page, selector, extension, signature) {
+  const downloadPromise = page.waitForEvent("download");
+  await page.locator(selector).click();
+  const download = await downloadPromise;
+  assert.match(download.suggestedFilename(), new RegExp(`\\.${extension}$`));
+  const stream = await download.createReadStream();
+  let head = Buffer.alloc(0);
+  for await (const chunk of stream) {
+    head = Buffer.concat([head, chunk]).subarray(0, 8);
+    if (head.length >= 8) break;
+  }
+  assert.equal(head.subarray(0, signature.length).toString("latin1"), signature);
+}
+
 const browser = await chromium.launch({ headless: true, channel: "chrome" });
 const context = await browser.newContext();
 const page = await context.newPage();
@@ -94,9 +108,36 @@ try {
   await page.waitForSelector("#resumePreview");
 
   assert.equal(await page.locator(".template-card").count(), 7);
+  assert.match(await page.locator(".step-page-desc").first().textContent(), /支持 7 套简历模板/);
+  const previewRatio = await page.locator("#resumePreview").evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return rect.width / rect.height;
+  });
+  assert.ok(Math.abs(previewRatio - 210 / 297) < 0.01);
+  assert.equal(await page.locator(".preview-education-row").count(), 1);
+  await page.locator('.template-card[data-template="doublecol"]').click();
+  assert.equal(await page.locator(".template-card.active").getAttribute("data-template"), "doublecol");
+  assert.ok((await page.locator("#resumePreview").getAttribute("class")).includes("template-doublecol"));
+  assert.equal(await page.locator("#resumePreview .preview-body").evaluate((element) => getComputedStyle(element).display), "grid");
+  await assertDownload(page, "#exportWord", "docx", "PK");
+  await assertDownload(page, "#exportPdf", "pdf", "%PDF");
   await page.locator('.template-card[data-template="github"]').click();
   assert.ok((await page.locator("#resumePreview").getAttribute("class")).includes("template-github"));
   assert.equal(await page.locator("#copyText").count(), 1);
+  await page.evaluate(() => { window.print = () => {}; });
+  await page.locator("#exportPrint").click();
+  assert.equal(await page.locator("body").evaluate((element) => element.classList.contains("printing-resume")), true);
+  assert.equal(await page.locator(".print-resume-shell #resumePreview").count(), 1);
+  await page.evaluate(() => {
+    document.body.classList.remove("printing-resume");
+    document.querySelector(".print-resume-shell")?.classList.remove("print-resume-shell");
+  });
+  await page.locator('.template-tab[data-tab="compare"]').click();
+  assert.equal(await page.locator("#comparePanel").isVisible(), true);
+  assert.doesNotMatch(await page.locator("#toastRoot").innerText(), /开发中/);
+  await page.locator('.template-tab[data-tab="tech"]').click();
+  assert.equal(await page.locator("#techPanel").isVisible(), true);
+  await page.locator('.template-tab[data-tab="resume"]').click();
 
   await page.locator('.template-tab[data-tab="versions"]').click();
   await page.waitForSelector("#newVersionBtn");
