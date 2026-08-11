@@ -386,7 +386,7 @@ function collectBullets(optimize, input = {}) {
     } else if (sec.type === "projectExperience") {
       result.projects.push({ name: sec.title || "项目", role: "", period: sec.period || "", bullets: items });
     } else if (sec.type === "skillsAndTools") {
-      result.skills.push(...items.flatMap((item) => item.split(/[；;、|]/).map((skill) => skill.trim()).filter(Boolean)));
+      result.skills.push(...items.flatMap((item) => item.split(/[/；;、|,:：,，]/).map((skill) => skill.replace(/^[-•·]\s*/, "").trim()).filter(Boolean)));
     }
   });
   if (!result.skills.length) {
@@ -404,8 +404,19 @@ function mergeResumeContent(result, source) {
   };
   for (const item of source.work || []) mergeExperience(merged.work, item);
   for (const item of source.projects || []) mergeExperience(merged.projects, item);
-  merged.skills = [...new Set([...merged.skills, ...(source.skills || [])])];
+  const seenSkills = new Set();
+  merged.skills = [...merged.skills, ...(source.skills || [])].map(cleanSkill).filter((skill) => {
+    if (!skill || /^(后端|工具|技术栈)$/i.test(skill)) return false;
+    const key = skill.toLowerCase();
+    if (seenSkills.has(key)) return false;
+    seenSkills.add(key);
+    return true;
+  });
   return merged;
+}
+
+function cleanSkill(skill = "") {
+  return String(skill).replace(/^[-•·]\s*/, "").replace(/\s*[-–—]\s*(后端|工具)$/i, "").trim();
 }
 
 function mergeExperience(target, incoming) {
@@ -459,7 +470,7 @@ function extractResumeProfile(text = "") {
   }
   profile.projects = parseExperienceLines(sections.project, "项目");
   profile.work = parseExperienceLines(sections.work, "实习");
-  profile.skills = sections.skills.join(" ").split(/[,，、;；|:：]/).map((skill) => skill.trim()).filter((skill) => skill && skill.length < 30);
+  profile.skills = sections.skills.join(" ").split(/[/,，、;；|:：]/).map((skill) => skill.replace(/^[-•·]\s*/, "").trim()).filter((skill) => skill && !/^(后端|工具|技术栈)$/i.test(skill) && skill.length < 30);
   const intro = lines.slice(1).find((line) => !/^【|^[-•·]/.test(line) && !/时间[：:]/.test(line) && !/本科|专业前/.test(line));
   profile.summary = intro || "";
   return profile;

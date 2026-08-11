@@ -59,7 +59,7 @@
 }
 .thumb-timeline .t-header {
   text-align: center;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 .thumb-timeline .t-tl-item {
   display: flex;
@@ -187,12 +187,12 @@
 }
 
 .resume-preview.template-timeline .preview-section-title {
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .resume-preview.template-timeline .timeline-item {
   position: relative;
-  padding-bottom: 12px;
+  padding-bottom: 8px;
 }
 
 .resume-preview.template-timeline .timeline-item::before {
@@ -257,7 +257,12 @@
 }
 
 .resume-preview.template-doublecol .preview-main .preview-section {
-  margin-bottom: 42px;
+  margin-bottom: 48px;
+}
+
+.resume-preview.template-doublecol .preview-main .preview-bullet {
+  font-size: 12.5px;
+  line-height: 1.65;
 }
 
 /* Template 5: 综合稿件 */
@@ -275,7 +280,7 @@
 }
 
 .resume-preview.template-comprehensive .preview-section {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 /* GitHub Style */
@@ -305,17 +310,17 @@
 }
 
 .resume-preview.template-github .preview-section {
-  margin-bottom: 42px;
+  margin-bottom: 36px;
 }
 
 .resume-preview.template-github .preview-bullet {
-  font-size: 14px;
-  line-height: 1.9;
+  font-size: 12.5px;
+  line-height: 1.75;
 }
 
 .resume-preview.template-github .preview-header {
-  padding-top: 24px;
-  padding-bottom: 24px;
+  padding-top: 16px;
+  padding-bottom: 16px;
 }
 
 .resume-preview.template-github .preview-section-title::before {
@@ -341,5 +346,5 @@
 }
 
 .resume-preview.template-ai .preview-section {
-  margin-bottom: 42px;
+  margin-bottom: 36px;
 }

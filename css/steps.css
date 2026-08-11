@@ -1124,7 +1124,7 @@
 }
 
 .resume-preview {
-  --preview-padding: 12mm;
+  --preview-padding: 10mm;
   width: min(100%, 210mm);
   min-height: 297mm;
   margin: 0 auto var(--gap-4);
@@ -1136,13 +1136,13 @@
 }
 
 .preview-header {
-  margin-bottom: 24px;
-  padding-bottom: 18px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--divider);
 }
 
 .preview-name {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-1);
   margin-bottom: var(--gap-2);
@@ -1151,20 +1151,20 @@
 .preview-contact {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 18px;
-  font-size: 12.5px;
+  gap: 8px 14px;
+  font-size: 11px;
   color: var(--text-3);
 }
 
 .preview-section {
-  margin-bottom: 38px;
+  margin-bottom: 34px;
 }
 
 .preview-section-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-1);
-  margin-bottom: 12px;
+  margin-bottom: 9px;
   display: flex;
   align-items: center;
   gap: var(--gap-2);
@@ -1172,8 +1172,8 @@
 
 .preview-section-title::before {
   content: "";
-  width: 4px;
-  height: 16px;
+  width: 3px;
+  height: 14px;
   border-radius: 2px;
   background: var(--primary);
 }
@@ -1181,30 +1181,30 @@
 .preview-bullet-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .preview-bullet {
   position: relative;
-  padding-left: 16px;
-  font-size: 14px;
-  line-height: 1.9;
+  padding-left: 14px;
+  font-size: 13.5px;
+  line-height: 1.75;
   color: var(--text-2);
 }
 
 .preview-summary-text {
   color: var(--text-2);
-  font-size: 14px;
-  line-height: 1.9;
+  font-size: 13.5px;
+  line-height: 1.75;
 }
 
 .preview-education-row {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 8px 18px;
+  gap: 6px 14px;
   color: var(--text-2);
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .preview-education-row strong {
@@ -1225,16 +1225,16 @@
 }
 
 .preview-skill {
-  padding: 6px 12px;
+  padding: 4px 9px;
   border-radius: 4px;
   background: var(--primary-light);
   color: var(--primary);
-  font-size: 12.5px;
+  font-size: 10.5px;
 }
 
 /* 内容较完整时允许 PDF 分页，并让最后的技能区块不被拆成“只有标签”的页尾。 */
 .resume-preview--multi .preview-section:last-child {
-  padding-top: 34px;
+  padding-top: 0;
 }
 
 .export-bar {
