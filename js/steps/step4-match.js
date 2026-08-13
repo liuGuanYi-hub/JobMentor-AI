@@ -7,6 +7,7 @@ import { chatJson } from "../ai/deepseek.js";
 import { PROMPTS, buildUserPayload } from "../ai/prompts.js";
 import { redact, mergeMaps, restoreTree } from "../privacy.js";
 import { exportFullReport } from "../export/report.js";
+import { buildKeywordCoverage } from "../features/career-insights.js";
 
 const STRENGTH_MAP = {
   "强": { cls: "success", text: "强" },
@@ -84,6 +85,13 @@ export async function renderStep4(container) {
       container.innerHTML = `<div class="card">无数据</div>`;
       return;
     }
+    const input = store.get("input") || {};
+    const jdAnalysis = store.get("jdAnalysis") || {};
+    const coverage = buildKeywordCoverage({
+      keywords: jdAnalysis.keywords || [],
+      input,
+      optimize: store.get("optimize"),
+    });
     container.innerHTML = `
       <div class="step-page-header">
         <div>
@@ -119,6 +127,31 @@ export async function renderStep4(container) {
             }).join("")}
           </tbody>
         </table>
+      </div>
+
+      <div class="section-card keyword-coverage-card">
+        <div class="keyword-coverage-header">
+          <div>
+            <div class="card-title">JD 关键词覆盖</div>
+            <p class="text-muted keyword-coverage-desc">把 JD 关键词和原始简历、优化结果逐条对照，快速看出哪些词有证据、哪些词还需要补充。</p>
+          </div>
+          <span class="badge ${coverage.coverageRate >= 70 ? "success" : "warning"}">${coverage.coveredCount}/${coverage.total} 已覆盖</span>
+        </div>
+        <div class="coverage-meter" aria-label="关键词覆盖率">
+          <div class="coverage-meter-fill" style="width:${coverage.coverageRate}%"></div>
+        </div>
+        <div class="coverage-summary">覆盖率 <strong>${coverage.coverageRate}%</strong> · ${coverage.missingCount ? `还有 ${coverage.missingCount} 个关键词缺少直接证据` : "关键词均已找到简历证据"}</div>
+        <div class="keyword-coverage-list">
+          ${coverage.items.length ? coverage.items.map((item) => `
+            <div class="keyword-coverage-item ${item.covered ? "covered" : "missing"}">
+              <div class="keyword-coverage-main">
+                <span class="coverage-state">${item.covered ? "已覆盖" : "待补证"}</span>
+                <strong>${esc(item.keyword)}</strong>
+              </div>
+              <div class="coverage-evidence">${item.covered ? `<span>${esc(item.evidence.source)}</span>${esc(item.evidence.text)}` : "原始简历和当前优化结果中未找到直接证据"}</div>
+            </div>
+          `).join("") : `<div class="coverage-empty">当前 JD 尚未提取出关键词。</div>`}
+        </div>
       </div>
 
       <div class="step-nav-buttons">

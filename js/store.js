@@ -6,7 +6,7 @@ const SCHEMA_VERSION = 2;
 // 任务内字段（路由到当前任务）
 const TASK_FIELDS = new Set([
   "input", "jdAnalysis", "diagnose", "matchAnalysis", "deepdive",
-  "optimize", "interview", "resumeConfig", "doneSteps", "currentStep",
+  "optimize", "interview", "interviewPractice", "resumeConfig", "doneSteps", "currentStep",
 ]);
 // 全局字段
 const GLOBAL_FIELDS = new Set(["settings", "tasks", "currentTaskId", "version", "lastActiveAt"]);
@@ -37,6 +37,10 @@ function defaultTask(title = "新建任务") {
     deepdive: null,
     optimize: null,
     interview: null,
+    interviewPractice: {
+      activeQuestionId: "behavior-1",
+      attempts: [],
+    },
     resumeConfig: {
       template: "timeline",
       color: "#5B6CFF",
@@ -127,7 +131,7 @@ class Store extends EventTarget {
     task.id = genId();
     task.createdAt = parsed.lastActiveAt || Date.now();
     task.updatedAt = Date.now();
-    for (const f of ["input", "jdAnalysis", "diagnose", "matchAnalysis", "deepdive", "optimize", "interview", "resumeConfig", "doneSteps", "currentStep"]) {
+    for (const f of ["input", "jdAnalysis", "diagnose", "matchAnalysis", "deepdive", "optimize", "interview", "interviewPractice", "resumeConfig", "doneSteps", "currentStep"]) {
       if (parsed[f] !== undefined) task[f] = parsed[f];
     }
     task.doneSteps = task.doneSteps || [];

@@ -139,6 +139,14 @@ try {
   assert.equal(await page.locator("#techPanel").isVisible(), true);
   await page.locator('.template-tab[data-tab="resume"]').click();
 
+  await page.goto(`${BASE_URL}/#/step/4`, { waitUntil: "domcontentloaded" });
+  await page.waitForSelector(".keyword-coverage-card");
+  assert.equal(await page.locator(".keyword-coverage-item").count(), 2);
+  assert.equal(await page.locator(".coverage-meter-fill").getAttribute("style"), "width:50%");
+  assert.match(await page.locator(".coverage-summary").textContent(), /还有 1 个关键词缺少直接证据/);
+  await page.goto(`${BASE_URL}/#/step/8`, { waitUntil: "domcontentloaded" });
+  await page.waitForSelector("#resumePreview");
+
   await page.locator('.template-tab[data-tab="versions"]').click();
   await page.waitForSelector("#newVersionBtn");
   await page.locator("#newVersionBtn").click();

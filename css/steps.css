@@ -574,6 +574,133 @@
   white-space: nowrap;
 }
 
+.keyword-coverage-card {
+  padding: var(--gap-4);
+}
+
+.keyword-coverage-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gap-4);
+}
+
+.keyword-coverage-desc {
+  max-width: 720px;
+  line-height: 1.6;
+}
+
+.coverage-meter {
+  height: 8px;
+  margin: var(--gap-4) 0 var(--gap-2);
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--divider);
+}
+
+.coverage-meter-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary), #7c5cff);
+  transition: width .25s ease;
+}
+
+.coverage-summary {
+  color: var(--text-3);
+  font-size: 12px;
+  margin-bottom: var(--gap-3);
+}
+
+.coverage-summary strong {
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.keyword-coverage-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--gap-2);
+}
+
+.keyword-coverage-item {
+  min-width: 0;
+  padding: var(--gap-3);
+  border: 1px solid var(--divider);
+  border-left: 3px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.keyword-coverage-item.covered {
+  border-left-color: var(--success);
+}
+
+.keyword-coverage-item.missing {
+  border-left-color: var(--warning);
+}
+
+.keyword-coverage-main {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-2);
+  min-width: 0;
+}
+
+.keyword-coverage-main strong {
+  overflow: hidden;
+  color: var(--text-1);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.coverage-state {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.covered .coverage-state {
+  color: var(--success);
+}
+
+.missing .coverage-state {
+  color: var(--warning);
+}
+
+.coverage-evidence {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 6px;
+  color: var(--text-3);
+  font-size: 11px;
+  line-height: 1.6;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.coverage-evidence span {
+  display: inline-block;
+  margin-right: 6px;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.coverage-empty {
+  padding: var(--gap-4);
+  color: var(--text-3);
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .keyword-coverage-header,
+  .keyword-coverage-list {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+}
+
 /* ===== Step 5 经历追问 ===== */
 .banner-deepdive {
   background: var(--bg);

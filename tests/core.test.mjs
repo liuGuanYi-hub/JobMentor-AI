@@ -19,6 +19,10 @@ import {
   loadExampleAnalysisCache,
   restoreExampleAnalysisCache,
 } from "../js/ai/full-analysis.js";
+import {
+  buildKeywordCoverage,
+  scoreInterviewAnswer,
+} from "../js/features/career-insights.js";
 import { store } from "../js/store.js";
 
 function response(status, body) {
@@ -106,6 +110,37 @@ test("DeepSeek 请求和 Key 连通性测试都具备超时边界", async () => 
 test("输入材料 token 估算能覆盖 JD、简历和补充信息", () => {
   const tokens = estimateInputTokens({ jdText: "岗位".repeat(100), resumeText: "简历".repeat(100), supplement: "补充".repeat(100) });
   assert.ok(tokens > 0);
+});
+
+test("JD 关键词覆盖会同时检查原始简历和优化结果证据", () => {
+  const result = buildKeywordCoverage({
+    keywords: ["Android", "Jetpack Compose", "Spring Boot"],
+    input: { resumeText: "使用 Kotlin 和 Jetpack Compose 完成 Android 客户端项目" },
+    optimize: {
+      sections: [{
+        title: "项目经历",
+        items: [{ selectedVariant: "authentic", authentic: "通过 Repository 完成 Android 模块开发" }],
+      }],
+    },
+  });
+  assert.equal(result.total, 3);
+  assert.equal(result.coveredCount, 2);
+  assert.equal(result.missingCount, 1);
+  assert.equal(result.items.find((item) => item.keyword === "Android").evidence.source, "原始简历");
+  assert.equal(result.items.find((item) => item.keyword === "Spring Boot").covered, false);
+});
+
+test("面试回答本地评分会输出多维反馈和 STAR 完整度", () => {
+  const result = scoreInterviewAnswer(
+    "请介绍一次 Android 项目中的性能优化经历",
+    "在 SilverLink 项目中，健康数据查询出现加载慢的问题，我负责定位日志和 Repository 查询路径，调整 Room 缓存与数据访问方式，最后通过测试确认耗时从 1.2 秒降到 0.4 秒。",
+    { keywords: ["Android", "性能优化", "Room"] },
+  );
+  assert.equal(result.dimensions.length, 5);
+  assert.ok(result.overall >= 70);
+  assert.equal(result.star.action, true);
+  assert.equal(result.star.result, true);
+  assert.ok(Array.isArray(result.missing));
 });
 
 test("Store v2 可以隔离任务和简历版本", async () => {
