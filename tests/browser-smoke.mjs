@@ -234,6 +234,13 @@ try {
   await examplePage.goto(`${BASE_URL}/#/step/7`, { waitUntil: "domcontentloaded" });
   await examplePage.waitForSelector(".interview-answer");
   assert.equal(await examplePage.locator(".interview-answer").count(), 10);
+  await examplePage.waitForSelector("#interviewPractice");
+  await examplePage.locator("#useReferenceAnswer").click();
+  assert.match(await examplePage.locator("#practiceAnswer").inputValue(), /AuthInterceptor/);
+  await examplePage.locator("#scorePractice").click();
+  await examplePage.waitForSelector("#practiceResult");
+  assert.equal(await examplePage.locator(".practice-history-item").count(), 1);
+  assert.ok(Number(await examplePage.locator(".practice-score strong").textContent()) > 0);
   assert.match(await examplePage.locator(".step-page-desc").first().textContent(), /SilverLink 项目本地示例答案/);
   assert.match(await examplePage.locator("body").textContent(), /AuthInterceptor/);
   assert.deepEqual(exampleApiRequests, []);
