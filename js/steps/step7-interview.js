@@ -7,13 +7,13 @@ import { chatJson } from "../ai/deepseek.js";
 import { PROMPTS, buildUserPayload } from "../ai/prompts.js";
 import { redact, mergeMaps, restoreTree } from "../privacy.js";
 import { exportFullReport } from "../export/report.js";
-import { createSilverLinkInterviewExample } from "../data/silverlink-interview-example.js";
+import { createGenericInterviewExample } from "../data/generic-interview-example.js";
 import { getInterviewQuestions, scoreInterviewAnswer } from "../features/career-insights.js";
 
 export async function renderStep7(container) {
   const input = store.get("input") || {};
   if (input.isExampleData) {
-    store.replace("interview", createSilverLinkInterviewExample());
+    store.replace("interview", createGenericInterviewExample());
     store.markStepDone(7);
   }
   const existing = store.get("interview");

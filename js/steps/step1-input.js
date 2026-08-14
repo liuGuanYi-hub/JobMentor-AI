@@ -507,26 +507,26 @@ function fillExampleData(container) {
 - 有跨端开发（Flutter / React Native）经验
 - 熟悉 MVVM / MVI / Clean Architecture`;
 
-  const resume = `曾子丹
+  const resume = `王小明（示例）
 2027 届软件工程本科 | 专业成绩 5% | 后端工程师实习 · 客户端项目实践
 
 【项目经验】
-SilverLink · 独立社区患者服务系统 + Android 客户端研发（实习）
+健康管理 App · 移动端客户端研发（课程项目）
 时间：2024.10 - 2026.06
-- 独立完成 Android 客户端核心功能模块，基于 Jetpack Compose 实现主要 UI
-- 负责通用 Repository 分层、离线模拟数据库降级与非破坏性回收机制
-- 优化健康监测时序数据和服药订单流水查询，提升数据加载效率
-- 协助前端联调，开发调试 / 性能监控工具
+- 独立完成客户端核心功能模块，基于响应式 UI 实现主要界面
+- 负责通用 Repository 分层、离线数据降级与非破坏性回收机制
+- 优化健康数据查询和列表加载，提升数据加载效率
+- 协助接口联调，开发调试 / 性能监控工具
 
 【实习经历】
-广东中科院信息工程研究所 · 后端工程师实习生
+某互联网科技公司 · 后端工程师实习生
 时间：2026.04 - 2026.07
-- 参与后端数据聚合服务的开发与维护
-- 用 Go 重构 ETL 流程，提升数据吞吐 30%
+- 参与后端数据服务的开发与维护
+- 用 Java 重构数据处理流程，提升数据吞吐 30%
 
 【技能清单】
-- Android: Kotlin, Jetpack Compose, MVVM, Repository, Room
-- 后端: Java, Spring Boot, Go, MySQL, Redis
+- 移动端: Kotlin, MVVM, Repository, 本地缓存, 网络请求
+- 后端: Java, Spring Boot, MySQL, Redis
 - 工具: Git, Linux, Docker`;
 
   container.querySelector("#fJdText").value = jd;

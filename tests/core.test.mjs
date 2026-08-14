@@ -133,7 +133,7 @@ test("JD 关键词覆盖会同时检查原始简历和优化结果证据", () =>
 test("面试回答本地评分会输出多维反馈和 STAR 完整度", () => {
   const result = scoreInterviewAnswer(
     "请介绍一次 Android 项目中的性能优化经历",
-    "在 SilverLink 项目中，健康数据查询出现加载慢的问题，我负责定位日志和 Repository 查询路径，调整 Room 缓存与数据访问方式，最后通过测试确认耗时从 1.2 秒降到 0.4 秒。",
+    "在健康管理 App 项目中，数据查询出现加载慢的问题，我负责定位日志和 Repository 查询路径，调整本地缓存与数据访问方式，最后通过测试确认耗时从 1.2 秒降到 0.4 秒。",
     { keywords: ["Android", "性能优化", "Room"] },
   );
   assert.equal(result.dimensions.length, 5);

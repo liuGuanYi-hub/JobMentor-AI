@@ -4,7 +4,7 @@ import { store } from "../store.js";
 import { chatJson } from "./deepseek.js";
 import { PROMPTS, buildUserPayload } from "./prompts.js";
 import { redact, mergeMaps, restoreTree } from "../privacy.js";
-import { createSilverLinkFullAnalysisExample } from "../data/silverlink-analysis-example.js";
+import { createGenericFullAnalysisExample } from "../data/generic-analysis-example.js";
 
 export const EXAMPLE_ANALYSIS_CACHE_KEY = "jobmentor-ai-example-analysis-v3";
 
@@ -56,7 +56,7 @@ export async function runFullAnalysis({ onProgress = () => {} } = {}) {
 }
 
 export async function runLocalExampleAnalysis({ onProgress = () => {}, delayMs = 220 } = {}) {
-  const example = createSilverLinkFullAnalysisExample();
+  const example = createGenericFullAnalysisExample();
   store.markStepDone(1);
   for (const definition of FULL_ANALYSIS_STEPS) {
     onProgress({ ...definition, status: "running" });

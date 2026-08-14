@@ -162,7 +162,7 @@ export function scoreInterviewAnswer(question, answer, { keywords = [] } = {}) {
       key: "relevance",
       label: "题目相关",
       score: Math.min(100, 30 + Math.min(45, overlap * 12) + (technical ? 8 : 0)),
-      tip: "先正面回答题目，再绑定 SilverLink 的具体页面、类或链路。",
+      tip: "先正面回答题目，再绑定项目中的具体页面、类或链路。",
     },
     {
       key: "credibility",

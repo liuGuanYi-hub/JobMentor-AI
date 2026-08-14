@@ -277,10 +277,10 @@ function buildPreviewHTML(config, input, optimize, jdAnalysis) {
 
   return `
     <div class="preview-header" ${config.template === "classic" ? `style="background:${color};"` : ""}>
-      <div class="preview-name">${esc(profile.name || "曾子丹")}</div>
+      <div class="preview-name">${esc(profile.name || "王小明（示例）")}</div>
       <div class="preview-contact">
-        <span>📞 ${esc(profile.phone || "13800138000")}</span>
-        <span>✉️ ${esc(profile.email || "zengzidan@example.com")}</span>
+        <span>📞 ${esc(profile.phone || "13800000000")}</span>
+        <span>✉️ ${esc(profile.email || "wangxiaoming@example.com")}</span>
         <span>📍 ${input?.target || ""}</span>
         <span>🎓 2027 届软件工程本科 · 专业前 5%</span>
       </div>
@@ -355,23 +355,23 @@ function collectBullets(optimize, input = {}) {
   const source = extractResumeProfile(input.resumeText);
   if (!optimize || !optimize.sections) {
     return mergeResumeContent({
-      summary: "软件工程本科，具备 Android 客户端、后端服务与 AI Agent 应用实践。熟悉 Kotlin、Jetpack Compose、MVVM、Repository、Room、Retrofit 和 Spring Boot，能够从需求拆解、页面与接口开发推进到联调、问题定位和测试验证。",
-      work: [{ company: "广东中科院信息工程研究所", role: "后端工程师实习生", period: "2026.04 - 2026.07", bullets: [
-        "参与数据聚合服务的开发与维护，涉及 Spark SQL / Flink",
-        "使用 Go 重建 ETL 流水线，吞吐提升约 30%",
+      summary: "软件工程本科，具备移动端客户端与后端服务实践。熟悉 Kotlin、MVVM、Repository、本地缓存与网络请求框架，能够从需求拆解、页面与接口开发推进到联调、问题定位和测试验证。",
+      work: [{ company: "某互联网科技公司", role: "后端工程师实习生", period: "2026.04 - 2026.07", bullets: [
+        "参与数据服务的开发与维护，涉及 SQL 查询与数据管道",
+        "使用 Java 重构数据处理流程，吞吐提升约 30%",
       ]}],
-      projects: [{ name: "SilverLink · 独立社区患者服务系统 + Android 客户端研发", role: "Android 客户端", period: "2024.10 - 2026.06", bullets: [
-        "基于 Jetpack Compose 独立完成 Android 客户端核心模块",
+      projects: [{ name: "健康管理 App · 移动端客户端研发", role: "移动端客户端", period: "2024.10 - 2026.06", bullets: [
+        "基于响应式 UI 独立完成客户端核心模块",
         "设计 Repository 分层与离线数据降级机制，缓存回收无破坏性",
-        "优化健康监测时序查询，加载耗时从 1.2s 降至 0.4s",
-      ]}, { name: "辅助智能小组原型 Agent · AI 应用开发", role: "AI 应用", period: "2026.02", bullets: [
-        "基于 LangChain + WebClient 集成多 Agent，调度策略可热更新",
-        "构建数据驱动评估体系，识别召回/精确率提升 12pt",
-        "面向学生事务咨询、通知查询和材料指导等场景，基于大语言模型与 Agent 框架搭建校园服务对话引擎，支持多轮对话与任务流程梳理",
-        "将请假、证明材料、奖助学金、活动通知等高频事务拆解为可调用技能，设计意图识别、上下文记忆和任务状态联动",
+        "优化数据查询，加载耗时从 1.2s 降至 0.4s",
+      ]}, { name: "校园服务助手 Agent · AI 应用开发", role: "AI 应用", period: "2026.02", bullets: [
+        "基于 Agent 框架集成多智能体，调度策略可热更新",
+        "构建数据驱动评估体系，识别效果提升 12pt",
+        "面向事务咨询、通知查询等场景，基于大语言模型与 Agent 框架搭建校园服务对话引擎，支持多轮对话与任务流程梳理",
+        "将高频事务拆解为可调用技能，设计意图识别、上下文记忆和任务状态联动",
         "通过 Webhook/WebSocket 接入协同平台，设计事件触发链路，处理对话消息、流程节点和任务状态之间的联动",
       ]}],
-      skills: ["Kotlin", "Jetpack Compose", "MVVM", "Coroutines", "Flow", "Retrofit", "Room", "Git"],
+      skills: ["Kotlin", "MVVM", "Coroutines", "Flow", "网络请求", "本地缓存", "Git"],
     }, source);
   }
 

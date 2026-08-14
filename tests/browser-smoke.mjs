@@ -186,7 +186,7 @@ try {
   localFlowState.tasks[taskId].input.isExampleData = true;
   localFlowState.tasks[taskId].input.target = "安卓开发";
   localFlowState.tasks[taskId].input.jdText = "负责 Android 客户端开发、Compose UI 和性能优化";
-  localFlowState.tasks[taskId].input.resumeText = "使用 Kotlin、Jetpack Compose、Room 和 Retrofit 完成 SilverLink 项目";
+  localFlowState.tasks[taskId].input.resumeText = "使用 Kotlin、MVVM、Repository 和网络请求框架完成健康管理 App 项目";
   localFlowState.tasks[taskId].doneSteps = [];
   localFlowState.tasks[taskId].currentStep = 1;
   const localFlowPage = await context.newPage();
@@ -236,19 +236,19 @@ try {
   assert.equal(await examplePage.locator(".interview-answer").count(), 10);
   await examplePage.waitForSelector("#interviewPractice");
   await examplePage.locator("#useReferenceAnswer").click();
-  assert.match(await examplePage.locator("#practiceAnswer").inputValue(), /AuthInterceptor/);
+  assert.match(await examplePage.locator("#practiceAnswer").inputValue(), /拦截器/);
   await examplePage.locator("#scorePractice").click();
   await examplePage.waitForSelector("#practiceResult");
   assert.equal(await examplePage.locator(".practice-history-item").count(), 1);
   assert.ok(Number(await examplePage.locator(".practice-score strong").textContent()) > 0);
-  assert.match(await examplePage.locator(".step-page-desc").first().textContent(), /SilverLink 项目本地示例答案/);
-  assert.match(await examplePage.locator("body").textContent(), /AuthInterceptor/);
+  assert.match(await examplePage.locator(".step-page-desc").first().textContent(), /通用示例答案/);
+  assert.match(await examplePage.locator("body").textContent(), /拦截器/);
   assert.deepEqual(exampleApiRequests, []);
   assert.deepEqual(examplePageErrors, []);
   await examplePage.close();
 
   assert.deepEqual(pageErrors, []);
-  console.log("浏览器回归通过：7 套模板、版本快照、任务新建、API Key 弹窗、插件 JD 注入、本地 SilverLink 面试答案、无 pageerror");
+  console.log("浏览器回归通过：7 套模板、版本快照、任务新建、API Key 弹窗、插件 JD 注入、本地通用示例答案、无 pageerror");
 } finally {
   await browser.close();
 }

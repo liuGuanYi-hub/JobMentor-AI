@@ -38,8 +38,8 @@
 - **JD 关键词覆盖矩阵** — 命中 / 未命中 / 缺失关键词分类
 - **面试回答训练评分** — 5 维度（内容实质 / 表达结构 / 题目相关 / 可信证据 / 个人判断）+ STAR 完整度
 
-### 📂 真实示例数据
-内置 SilverLink 项目完整 8 步分析结果与面试参考答案，一键加载预览真实效果。
+### 📂 通用示例数据
+内置完全虚构的示例数据（健康管理 App 完整 8 步分析结果与面试参考答案），一键加载预览真实效果，不含任何真实个人信息。
 
 ### 🔌 浏览器插件联动
 Chrome 插件选中招聘网站 JD 一键发送 → 本地应用自动填入 + 跳转）。
@@ -84,7 +84,7 @@ node dev-server.mjs
 
 ### 3.（可选）加载真实示例数据
 
-右上角「任务」菜单 → 新建任务 → 在 Step 1 点击「使用示例数据」可加载 SilverLink 安卓方向的完整 8 步分析结果，无需 API 调用即可预览所有模板渲染效果。
+右上角「任务」菜单 → 新建任务 → 在 Step 1 点击「使用示例数据」可加载通用示例的完整 8 步分析结果，无需 API 调用即可预览所有模板渲染效果。
 
 ---
 
@@ -149,8 +149,8 @@ JobMentor AI/
 │   │   ├── full-analysis.js    # 一键全量分析流水线（复用已缓存步骤）
 │   │   └── prompts.js          # 8 步 Prompt 模板
 │   ├── data/
-│   │   ├── silverlink-analysis-example.js    # 真实 8 步分析结果
-│   │   └── silverlink-interview-example.js   # 面试参考答案
+│   │   ├── generic-analysis-example.js    # 通用虚构 8 步分析结果
+│   │   └── generic-interview-example.js   # 通用面试参考答案
 │   ├── features/
 │   │   └── career-insights.js  # 本地洞察：关键词覆盖矩阵 + 面试评分
 │   ├── parsers/
