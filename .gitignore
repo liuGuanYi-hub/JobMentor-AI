@@ -4,9 +4,7 @@ node_modules/
 
 # 测试残留
 .playwright-cli/
-*.png
-*.yaml
-*.log
+output/
 
 # WorkBuddy 记忆/计划（本地私有）
 .workbuddy/
@@ -14,3 +12,10 @@ node_modules/
 # 系统文件
 .DS_Store
 Thumbs.db
+
+# 例外规则（必须放在通用规则之后才生效）
+# 允许 docs/screenshots/ 下的 PNG 进入仓库（README 引用）
+!docs/
+!docs/screenshots/
+!docs/screenshots/*.png
+!docs/**/*.png
