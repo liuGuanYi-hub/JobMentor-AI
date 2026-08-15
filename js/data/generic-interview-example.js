@@ -3,7 +3,7 @@
 
 export const GENERIC_INTERVIEW_EXAMPLE = {
   sourceLabel: "通用示例答案",
-  selfIntro: "我是一名软件工程本科生，主要做过健康管理 App 项目。项目采用 Kotlin、响应式 UI、ViewModel、StateFlow、本地缓存和网络请求框架，围绕用户健康记录、服务订单和家庭关怀流程。我在项目中重点关注角色隔离、远程接口与本地演示回退、数据展示以及状态管理，希望在移动端开发岗位继续把功能做得稳定、清晰、可维护。",
+  selfIntro: "我是一名软件工程本科生，专业排名前 5%，主要做过健康管理 App 和校园服务助手 Agent 两个项目。客户端项目采用 Kotlin、响应式 UI、ViewModel、StateFlow、本地缓存和网络请求框架，独立完成登录、健康档案、数据看板、服务预约等 6 大模块，设计 Repository 分层并实现离线降级，将弱网页面可用性提升至 95%。同时做过 Agent 应用，构建数据驱动评估体系，把意图识别精确率提升 12pt。我习惯用数据量化交付结果，希望在移动端开发岗位继续把功能做得稳定、清晰、可维护。",
   behaviorQuestions: [
     {
       question: "在项目中，你负责了客户端核心开发，能分享一下你是如何设计和实现不同角色权限隔离的吗？",
@@ -48,13 +48,13 @@ export const GENERIC_INTERVIEW_EXAMPLE = {
       answer: "我会按资源设计路径和 HTTP 方法。健康测量数据使用 GET /api/health/data/{type} 按类型查询，使用 POST /api/health/data 新增，请求体包含 type、value、unit、measureTime；健康记录使用 GET /api/health/record 查询，PUT /api/health/record 整体更新，字段包括 healthType、allergies、chronicDiseases、medicalHistory、height、weight。接口统一返回 ApiResponse，结构是 { code, message, data }，data 承载具体数据。客户端通过网络框架声明接口，拦截器自动携带认证 Token，并对一次 401 做 refresh 后重试。",
     },
   ],
-  skills: ["Kotlin / 协程", "响应式 UI", "MVVM / StateFlow", "本地缓存 + 网络请求", "角色权限与离线回退"],
+  skills: ["Kotlin / 协程", "响应式 UI", "MVVM / StateFlow", "Room + 网络请求", "Repository 分层 / 离线降级"],
   dataPoints: [
-    "单 Activity + 导航，按角色切换入口",
-    "数据采用远程优先、本地回退策略",
-    "后端使用拦截器 + 角色访问策略做路径边界",
-    "接口覆盖数据查询、新增、记录查询更新、风险确认和提醒",
-    "网络客户端配置超时、并发上限和一次 401 refresh 重试",
+    "独立完成 6 大功能模块，覆盖全流程 90% 交互",
+    "Repository 分层 + 本地缓存，核心模块测试覆盖率 78%",
+    "离线降级策略，弱网页面可用性提升至 95%",
+    "查询索引与分页缓存，列表滑动帧率 45fps → 60fps",
+    "标注 500+ 条对话数据，意图识别精确率提升 12pt",
   ],
 };
 
