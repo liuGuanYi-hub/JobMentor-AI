@@ -274,18 +274,30 @@ function buildPreviewHTML(config, input, optimize, jdAnalysis) {
   const note = config.note || "";
   const showAvatar = !!config.showAvatar;
   const input_avatar = input.avatar;
+  const tpl = config.template || "modern";
+  const target = input?.target || "";
+
+  // 联系信息结构化展示（不同模板可差异排版）
+  const contactItems = [
+    profile.phone ? { icon: "📞", label: profile.phone } : null,
+    profile.email ? { icon: "✉️", label: profile.email } : null,
+    target ? { icon: "📍", label: target } : null,
+    profile.education ? { icon: "🎓", label: `${profile.education}${profile.educationDetail ? " · " + profile.educationDetail : ""}` } : null,
+  ].filter(Boolean);
+
+  // 技能分组渲染
+  const coreSkills = (jdAnalysis?.coreCompetencies || []).map((c) => c.name);
+  const allSkills = [...new Set([...coreSkills, ...(selectedBullets.skills || [])])].slice(0, 12);
 
   return `
-    <div class="preview-header" ${config.template === "classic" ? `style="background:${color};"` : ""}>
+    <div class="preview-header ${tpl === "classic" ? "preview-header-classic" : ""}" ${tpl === "classic" ? `style="background:${color};"` : ""}>
+      ${showAvatar && input_avatar ? `<img class="preview-avatar-img" src="${input_avatar}" alt="头像" />` : ""}
       <div class="preview-name">${esc(profile.name || "王小明（示例）")}</div>
+      ${target ? `<div class="preview-title">${esc(target)}</div>` : ""}
       <div class="preview-contact">
-        <span>📞 ${esc(profile.phone || "13800000000")}</span>
-        <span>✉️ ${esc(profile.email || "wangxiaoming@example.com")}</span>
-        <span>📍 ${input?.target || ""}</span>
-        <span>🎓 2027 届软件工程本科 · 专业前 5%</span>
+        ${contactItems.map((it) => `<span class="preview-contact-item"><i>${it.icon}</i>${esc(it.label)}</span>`).join("")}
       </div>
-      ${note ? `<div class="text-muted mt-3" style="font-style:italic;">${esc(note)}</div>` : ""}
-      ${showAvatar && input_avatar ? `<img src="${input_avatar}" style="width:80px;height:80px;border-radius:50%;float:right;margin-top:-60px;" />` : ""}
+      ${note ? `<div class="preview-note">${esc(note)}</div>` : ""}
     </div>
 
     <div class="preview-body">
@@ -293,9 +305,7 @@ function buildPreviewHTML(config, input, optimize, jdAnalysis) {
     <div class="preview-section" style="--accent-color:${color};">
       <div class="preview-section-title">核心能力</div>
       <div class="preview-skills">
-        ${(jdAnalysis?.coreCompetencies || []).map(c => `<span class="preview-skill" style="background:${color}15;color:${color};">${esc(c.name)}</span>`).join("")}
-        <span class="preview-skill" style="background:${color}15;color:${color};">Android · Kotlin · Jetpack Compose</span>
-        <span class="preview-skill" style="background:${color}15;color:${color};">MVVM · Repository · Room</span>
+        ${allSkills.map((s) => `<span class="preview-skill" style="background:${color}15;color:${color};">${esc(s)}</span>`).join("")}
       </div>
     </div>
 
@@ -318,8 +328,11 @@ function buildPreviewHTML(config, input, optimize, jdAnalysis) {
       <div class="preview-section-title">工作 / 实习经历</div>
       ${(selectedBullets.work || []).map(w => `
         <div class="timeline-item">
-          <div style="font-weight:600;color:var(--text-1);">${esc(w.company)} · <span style="color:var(--text-3);">${esc(w.role)}</span></div>
-          <div class="preview-timeline-period">${esc(w.period)}</div>
+          <div class="timeline-item-head">
+            <span class="timeline-item-title">${esc(w.company)}</span>
+            ${w.role ? `<span class="timeline-item-role">${esc(w.role)}</span>` : ""}
+            <span class="timeline-item-period">${esc(w.period)}</span>
+          </div>
           <ul class="preview-bullet-list">
             ${(w.bullets || []).map(b => `<li class="preview-bullet">${esc(b)}</li>`).join("")}
           </ul>
@@ -331,8 +344,11 @@ function buildPreviewHTML(config, input, optimize, jdAnalysis) {
       <div class="preview-section-title">项目经历</div>
       ${(selectedBullets.projects || []).map(p => `
         <div class="timeline-item">
-          <div style="font-weight:600;color:var(--text-1);">${esc(p.name)} · <span style="color:var(--text-3);">${esc(p.role)}</span></div>
-          <div class="preview-timeline-period">${esc(p.period)}</div>
+          <div class="timeline-item-head">
+            <span class="timeline-item-title">${esc(p.name)}</span>
+            ${p.role ? `<span class="timeline-item-role">${esc(p.role)}</span>` : ""}
+            <span class="timeline-item-period">${esc(p.period)}</span>
+          </div>
           <ul class="preview-bullet-list">
             ${(p.bullets || []).map(b => `<li class="preview-bullet">${esc(b)}</li>`).join("")}
           </ul>
@@ -391,9 +407,11 @@ function collectBullets(optimize, input = {}) {
     }
   });
   if (!result.skills.length) {
-    result.skills = ["Kotlin", "Jetpack Compose", "MVVM", "Coroutines", "Flow", "Retrofit", "Room", "Git"];
+    result.skills = ["Kotlin", "MVVM", "Coroutines", "Flow", "网络请求", "本地缓存", "Git"];
   }
-  return mergeResumeContent(result, source);
+  // 有 optimize 数据时不再合并 resumeText 提取的重复内容，避免双层渲染
+  if (!result.summary && source.summary) result.summary = source.summary;
+  return result;
 }
 
 function mergeResumeContent(result, source) {
@@ -968,11 +986,13 @@ function buildResumeObjectFromPreview(previewEl) {
 }
 
 function parseExperienceBlock(sec) {
-  const head = sec.querySelector(".timeline-item > div, div[style*='font-weight:600']");
-  const periodEl = sec.querySelector(".preview-timeline-period, .timeline-period");
+  const head = sec.querySelector(".timeline-item-head, .timeline-item > div, div[style*='font-weight:600']");
+  const periodEl = sec.querySelector(".timeline-item-period, .preview-timeline-period, .timeline-period");
+  const titleEl = sec.querySelector(".timeline-item-title");
+  const roleEl = sec.querySelector(".timeline-item-role");
   const item = {
-    name: head?.textContent?.split("·")[0]?.trim() || "",
-    role: head?.textContent?.split("·")[1]?.trim() || "",
+    name: titleEl?.textContent?.trim() || head?.textContent?.split("·")[0]?.trim() || "",
+    role: roleEl?.textContent?.trim() || head?.textContent?.split("·")[1]?.trim() || "",
     period: periodEl?.textContent?.trim() || "",
     bullets: [],
   };

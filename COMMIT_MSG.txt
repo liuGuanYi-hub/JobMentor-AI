@@ -1,0 +1,21 @@
+丰富 7 套简历模板的视觉与结构
+
+HTML 结构增强（js/steps/step8-final.js）
+- 增加 .preview-title（目标职位行）、.preview-contact-item（带图标）
+- 时间线条目升级为 .timeline-item-head（含 title/role/period 三个子元素）
+- 头像支持 .preview-avatar-img 圆形裁剪
+- 适应新版 parseExperienceBlock 以正确读取 Word 导出
+
+模板 CSS 重写（css/templates.css）：每套模板更精致的视觉
+- modern：虚线章节分隔 + 蓝色顶部分隔 + 技能边框
+- timeline：左侧连接竖线 + 节点圆环 + 居中标题
+- classic：渐变 header（蓝紫色）+ 大写姓名 + 章节下划线
+- doublecol：左侧渐变背景栏 + 垂直技能条 + 卡片化章节
+- comprehensive：渐变色块标题 + 卡片化章节 + 居中大标题
+- github：黑色 README header（``` 前缀） + 绿色 ## 装饰 + + 符号 bullet
+- ai：渐变背景 + 圆角卡片章节 + 紫色渐变文字 + 胶囊标签
+
+PDF 兼容性修复：移除所有 color-mix() 用具体 rgba 替代
+（html2canvas 1.4.1 不支持 color 函数导致 PDF 渲染失败）
+
+验证：核心单测 9/9 通过，浏览器冒烟测试通过（含 PDF/Word 导出）
