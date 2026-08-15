@@ -219,49 +219,77 @@ export async function renderStep8(container) {
 }
 
 function thumbInner(key) {
+  // 共享微缩简历内容（姓名/职位/联系方式/章节标题/章节内容/技能标签）
+  const nameRow = `<div class="t-name">王小明</div><div class="t-title">Android 客户端</div>`;
+  const contact = `<div class="t-contact"><span>📞</span><span>✉</span><span>📍</span></div>`;
+  const sec = (title) => `<div class="t-sec">${title}</div>`;
+  const bullet = (cls = "") => `<div class="t-bullet ${cls}"></div>`;
+  const skills = `<div class="t-skills"><span class="t-tag">Kotlin</span><span class="t-tag">Compose</span><span class="t-tag">MVVM</span></div>`;
+
   switch (key) {
     case "modern":
-      return `<div class="t-header"><div class="t-avatar"></div><div class="t-info"><div class="t-line medium"></div><div class="t-line short"></div></div></div>
-              <div class="t-line shorter"></div><div class="t-line"></div>
-              <div class="t-block"></div><div class="t-block"></div>`;
+      return `${nameRow}
+              <div class="t-thin-line"></div>
+              ${contact}
+              ${sec("核心能力")}
+              ${skills}
+              ${sec("项目经验")}
+              ${bullet()}${bullet()}${bullet()}`;
     case "timeline":
-      return `<div class="t-header"><div class="t-line short"></div></div>
-              <div class="t-tl-item"><div class="t-tl-dot"></div><div class="t-tl-content"></div></div>
-              <div class="t-tl-item"><div class="t-tl-dot"></div><div class="t-tl-content"></div></div>
-              <div class="t-tl-item"><div class="t-tl-dot"></div><div class="t-tl-content"></div></div>
-              <div class="t-tl-item"><div class="t-tl-dot"></div><div class="t-tl-content"></div></div>`;
+      return `<div class="t-name">王小明</div><div class="t-thin-line mx"></div>
+              ${sec("项目经验")}
+              <div class="t-tl"><div class="t-dot"></div><div class="t-tl-body"><div class="t-tl-name">健康管理 App</div><div class="t-bullet"></div><div class="t-bullet"></div></div></div>
+              <div class="t-tl"><div class="t-dot"></div><div class="t-tl-body"><div class="t-tl-name">校园服务 Agent</div><div class="t-bullet"></div></div></div>`;
     case "classic":
-      return `<div class="t-header">NAME</div>
-              <div class="t-line shorter" style="margin-bottom:6px;"></div>
-              <div class="t-section"></div>
-              <div class="t-section"></div>`;
+      return `<div class="t-header">王小明</div>
+              <div class="t-header-sub">ANDROID 客户端</div>
+              ${sec("核心能力")}
+              ${skills}
+              ${sec("项目经验")}
+              ${bullet()}${bullet()}${bullet()}`;
     case "doublecol":
-      return `<div class="t-line medium" style="margin-bottom:6px;"></div>
+      return `${nameRow}
+              <div class="t-thin-line"></div>
               <div class="t-cols">
-                <div class="t-col" style="height:60px;"></div>
-                <div class="t-col" style="height:60px;"></div>
-              </div>
-              <div class="t-line"></div>`;
+                <div class="t-col t-col-aside">
+                  <div class="t-mini-sec">技能</div>
+                  ${skills}
+                </div>
+                <div class="t-col t-col-main">
+                  ${sec("项目")}
+                  ${bullet()}${bullet()}
+                </div>
+              </div>`;
     case "comprehensive":
-      return `<div class="t-line medium" style="margin-bottom:6px;"></div>
-              <div class="t-row"><div class="t-block2"></div><div class="t-block2"></div></div>
-              <div class="t-row"><div class="t-block2"></div><div class="t-block2"></div></div>`;
+      return `${nameRow}
+              ${contact}
+              <div class="t-title-bar">项目经验</div>
+              <div class="t-card">
+                <div class="t-card-name">健康管理 App</div>
+                ${bullet()}${bullet()}${bullet()}
+              </div>
+              <div class="t-title-bar">技能工具</div>
+              ${skills}`;
     case "github":
       return `<div class="t-header">README.md</div>
-              <div class="t-code-line"></div>
-              <div class="t-code-line green"></div>
-              <div class="t-code-line purple"></div>
-              <div class="t-code-line"></div>
-              <div class="t-code-line"></div>
-              <div class="t-code-line green"></div>`;
+              <div class="t-gh-name"># 王小明</div>
+              <div class="t-gh-h2">## 核心能力</div>
+              <div class="t-gh-line">+ Kotlin</div>
+              <div class="t-gh-line">+ Compose</div>
+              <div class="t-gh-h2">## 项目</div>
+              <div class="t-gh-line">+ 健康管理 App</div>`;
     case "ai":
       return `<div class="t-ai-head">
+                <span class="t-ai-name">王小明</span>
                 <span class="t-ai-tag">AI</span>
                 <span class="t-ai-tag">LLM</span>
               </div>
-              <div class="t-line short"></div>
-              <div class="t-line medium"></div>
-              <div class="t-block"></div>`;
+              <div class="t-ai-title">Android · Agent · LLM</div>
+              ${sec("项目经验")}
+              <div class="t-ai-card">
+                <div class="t-bullet"></div>
+                <div class="t-bullet"></div>
+              </div>`;
     default:
       return "";
   }

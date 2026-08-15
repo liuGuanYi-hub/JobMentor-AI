@@ -1,84 +1,129 @@
 /* templates.css — 7 套简历模板的可视缩略与预览样式 */
 
-/* 模板缩略图装饰 */
+/* 模板缩略图装饰（更接近真实应用模板后的简历预览） */
 .thumb-decor {
   width: 100%;
   height: 100%;
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 6px 8px;
-  font-size: 7px;
-  line-height: 1.5;
+  padding: 6px 7px;
+  font-size: 6.5px;
+  line-height: 1.4;
   background: #fff;
   overflow: hidden;
+  color: #1f2937;
 }
 
-.thumb-decor .t-line {
-  background: var(--text-3);
-  height: 3px;
-  border-radius: 1px;
+/* 共享微缩简历元素 */
+.thumb-decor .t-name {
+  font-weight: 700;
+  font-size: 8.5px;
+  color: #111827;
+  margin-bottom: 1px;
+}
+.thumb-decor .t-title {
+  font-size: 5.5px;
+  color: #6b7280;
   margin-bottom: 3px;
 }
-
-.thumb-decor .t-line.short { width: 60%; }
-.thumb-decor .t-line.shorter { width: 40%; }
-.thumb-decor .t-line.medium { width: 75%; }
-
-.thumb-decor .t-block {
-  background: var(--bg);
+.thumb-decor .t-thin-line {
+  height: 1px;
+  background: #d1d5db;
+  margin: 2px 0;
+}
+.thumb-decor .t-thin-line.mx {
+  margin: 4px auto 3px;
+  width: 50%;
+}
+.thumb-decor .t-contact {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 4px;
+  font-size: 5.5px;
+  color: #9ca3af;
+}
+.thumb-decor .t-contact span {
+  background: #f3f4f6;
   border-radius: 2px;
-  flex: 1;
+  padding: 1px 3px;
+}
+.thumb-decor .t-sec {
+  font-weight: 600;
+  font-size: 6px;
+  color: #1f2937;
+  margin-top: 3px;
+  margin-bottom: 2px;
+  padding-left: 4px;
+  border-left: 2px solid var(--primary);
+}
+.thumb-decor .t-bullet {
+  height: 3px;
+  background: #e5e7eb;
+  border-radius: 1px;
+  margin-bottom: 2px;
+  margin-left: 4px;
+  position: relative;
+}
+.thumb-decor .t-bullet::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: 0;
+  width: 2px;
+  height: 3px;
+  background: var(--primary);
+}
+.thumb-decor .t-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
   margin-bottom: 3px;
+}
+.thumb-decor .t-tag {
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 5px;
+  padding: 1px 4px;
+  border-radius: 2px;
 }
 
 /* Template 1: 简约现代卡片 */
 .thumb-modern {
   background: #fff;
 }
-.thumb-modern .t-header {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 4px;
-  padding-bottom: 3px;
-  border-bottom: 1px solid var(--text-3);
-}
-.thumb-modern .t-avatar {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #5B6CFF;
-  flex-shrink: 0;
-}
-.thumb-modern .t-info { flex: 1; }
-.thumb-modern .t-info .t-line { margin-bottom: 2px; }
 
 /* Template 2: 时间轴 */
 .thumb-timeline {
   background: #fff;
 }
-.thumb-timeline .t-header {
+.thumb-timeline .t-name {
   text-align: center;
-  margin-bottom: 8px;
 }
-.thumb-timeline .t-tl-item {
+.thumb-timeline .t-tl {
   display: flex;
   gap: 4px;
   margin-bottom: 4px;
 }
-.thumb-timeline .t-tl-dot {
-  width: 5px;
-  height: 5px;
+.thumb-timeline .t-dot {
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: #5B6CFF;
-  margin-top: 2px;
+  background: var(--primary);
+  margin-top: 5px;
   flex-shrink: 0;
+  box-shadow: 0 0 0 1.5px #fff, 0 0 0 2.5px rgba(91, 108, 255, 0.35);
 }
-.thumb-timeline .t-tl-content {
+.thumb-timeline .t-tl-body {
   flex: 1;
-  height: 14px;
-  background: var(--bg);
-  border-radius: 2px;
+  border-left: 1.5px solid rgba(91, 108, 255, 0.35);
+  padding-left: 4px;
+}
+.thumb-timeline .t-tl-name {
+  font-weight: 600;
+  font-size: 5.5px;
+  color: #111827;
+  margin-bottom: 2px;
 }
 
 /* Template 3: 经典 header */
@@ -87,19 +132,30 @@
 }
 .thumb-classic .t-header {
   background: linear-gradient(90deg, #5B6CFF, #8E6BFF);
-  height: 24px;
-  border-radius: 0 0 4px 4px;
-  margin: -6px -8px 6px;
-  padding: 4px 8px;
   color: #fff;
-  font-weight: 600;
-  font-size: 8px;
+  margin: -6px -7px 4px;
+  padding: 5px 8px;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 0.04em;
 }
-.thumb-classic .t-section {
-  background: var(--bg);
-  border-radius: 2px;
-  flex: 1;
+.thumb-classic .t-header-sub {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 5.5px;
+  letter-spacing: 0.05em;
   margin-bottom: 4px;
+}
+.thumb-classic .t-sec {
+  border-left: none;
+  padding-left: 0;
+  color: #5B6CFF;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 2px;
+}
+.thumb-classic .t-tag {
+  background: #eef2ff;
+  color: #5B6CFF;
+  border: 1px solid #c7d2fe;
 }
 
 /* Template 4: 双栏卡片 */
@@ -110,74 +166,138 @@
   display: flex;
   gap: 4px;
   flex: 1;
+  margin-top: 4px;
 }
 .thumb-doublecol .t-col {
-  flex: 1;
-  background: var(--bg);
-  border-radius: 2px;
+  background: #f9fafb;
+  border-radius: 3px;
+  padding: 4px;
 }
-.thumb-doublecol .t-col:first-child {
-  background: linear-gradient(180deg, #5B6CFF22, #5B6CFF11);
+.thumb-doublecol .t-col-aside {
+  flex: 0 0 35%;
+  background: linear-gradient(180deg, #eef2ff, #f9fafb);
+}
+.thumb-doublecol .t-col-main {
+  flex: 1;
+}
+.thumb-doublecol .t-mini-sec {
+  font-size: 5px;
+  font-weight: 600;
+  color: #5B6CFF;
+  margin-bottom: 2px;
+  text-align: center;
+}
+.thumb-doublecol .t-skills {
+  justify-content: center;
+}
+.thumb-doublecol .t-col-main .t-sec {
+  border-left: 2px solid #5B6CFF;
 }
 
 /* Template 5: 经典综合稿件 */
 .thumb-comprehensive {
   background: #fff;
 }
-.thumb-comprehensive .t-row {
-  display: flex;
-  gap: 4px;
+.thumb-comprehensive .t-title-bar {
+  background: linear-gradient(90deg, #5B6CFF, #22C55E);
+  color: #fff;
+  font-size: 6px;
+  font-weight: 600;
+  padding: 2px 5px;
+  border-radius: 2px;
+  margin-top: 4px;
+  margin-bottom: 3px;
+  display: inline-block;
+}
+.thumb-comprehensive .t-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 3px;
+  padding: 3px 4px;
   margin-bottom: 4px;
 }
-.thumb-comprehensive .t-block2 {
-  flex: 1;
-  background: var(--bg);
-  border-radius: 2px;
-  height: 22px;
-}
-.thumb-comprehensive .t-block2:first-child {
-  background: #5B6CFF22;
+.thumb-comprehensive .t-card-name {
+  font-weight: 600;
+  font-size: 5.5px;
+  color: #111827;
+  margin-bottom: 2px;
 }
 
 /* GitHub Style 模板 */
 .thumb-github {
   background: #fff;
-  font-family: monospace;
+  font-family: var(--font-mono);
 }
 .thumb-github .t-header {
   background: #24292e;
-  margin: -6px -8px 6px;
-  padding: 4px 8px;
   color: #fff;
-  font-size: 7px;
+  margin: -6px -7px 4px;
+  padding: 3px 7px;
+  font-size: 6.5px;
   font-weight: 600;
 }
-.thumb-github .t-code-line {
-  height: 2px;
-  background: var(--text-3);
-  margin-bottom: 2px;
-  border-radius: 1px;
+.thumb-github .t-gh-name {
+  font-size: 7px;
+  font-weight: 700;
+  color: #24292e;
+  margin: 4px 0 3px;
 }
-.thumb-github .t-code-line.green { background: #22863a; }
-.thumb-github .t-code-line.purple { background: #6f42c1; }
+.thumb-github .t-gh-h2 {
+  font-size: 6px;
+  font-weight: 700;
+  color: #22863a;
+  margin: 3px 0 2px;
+}
+.thumb-github .t-gh-line {
+  font-size: 5.5px;
+  color: #24292e;
+  margin-bottom: 1px;
+  padding-left: 1px;
+}
 
 /* AI 工具稿件 */
 .thumb-ai {
-  background: linear-gradient(180deg, #fff 0%, #f0f4ff 100%);
+  background: linear-gradient(180deg, #fff 0%, #eef2ff 100%);
 }
 .thumb-ai .t-ai-head {
-  background: linear-gradient(90deg, var(--primary-light), #dbeafe);
-  margin: -6px -8px 6px;
-  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(90deg, #eef2ff, #dbeafe);
+  margin: -6px -7px 4px;
+  padding: 4px 7px;
+}
+.thumb-ai .t-ai-name {
+  font-weight: 700;
+  font-size: 7px;
+  color: #111827;
+  flex: 1;
 }
 .thumb-ai .t-ai-tag {
-  display: inline-block;
-  background: var(--primary);
+  background: #5B6CFF;
   color: #fff;
-  font-size: 6px;
-  padding: 1px 4px;
+  font-size: 5px;
+  padding: 1px 3px;
   border-radius: 2px;
-  margin-right: 2px;
+}
+.thumb-ai .t-ai-title {
+  font-size: 5px;
+  color: #5B6CFF;
+  background: linear-gradient(90deg, #5B6CFF, #8E6BFF);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 4px;
+}
+.thumb-ai .t-ai-card {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 3px 4px;
+  margin-bottom: 3px;
+}
+.thumb-ai .t-sec {
+  border-left-color: #8E6BFF;
 }
 
 /* ===== 模板预览区通用增强 ===== */
